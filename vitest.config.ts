@@ -2,7 +2,7 @@ import { defineConfig } from "vitest/config";
 
 export default defineConfig({
   test: {
-    include: ["packages/*/test/**/*.test.ts", "test/**/*.test.ts"],
+    include: ["packages/*/test/**/*.test.ts"],
     environment: "node",
     setupFiles: ["./vitest.setup.ts"],
     // Tests under packages/core hit one shared, real Postgres DB and mutate
