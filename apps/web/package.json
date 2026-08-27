@@ -1,0 +1,6 @@
+{
+  "name": "@agentos/web",
+  "private": true,
+  "scripts": { "dev": "next dev", "build": "next build", "typecheck": "tsc --noEmit" },
+  "dependencies": { "@agentos/core": "*", "@agentos/channels": "*", "@agentos/skills": "*" }
+}
