@@ -4,6 +4,7 @@ import { organizations } from "../src/db/schema";
 import { resolveOrgContext } from "../src/context";
 
 describe("resolveOrgContext", () => {
+  beforeAll(async () => { await db.delete(organizations); });
   afterAll(async () => { await db.delete(organizations); });
 
   it("throws when no organization is seeded", async () => {
