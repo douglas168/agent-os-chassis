@@ -2,8 +2,7 @@ import { execFileSync } from "node:child_process";
 import { existsSync, lstatSync, readFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import test from "node:test";
-import assert from "node:assert/strict";
+import { expect, test } from "vitest";
 
 const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), "../../..");
 
@@ -12,19 +11,19 @@ test("the root workspace declares all AgentOS packages", () => {
     readFileSync(resolve(repoRoot, "package.json"), "utf8"),
   ) as { workspaces?: string[] };
 
-  assert.deepEqual(rootPackage.workspaces, ["apps/*", "packages/*"]);
+  expect(rootPackage.workspaces).toEqual(["apps/*", "packages/*"]);
 
   for (const packageName of ["core", "channels", "skills"]) {
     const packagePath = resolve(repoRoot, "packages", packageName, "package.json");
-    assert.equal(existsSync(packagePath), true, `${packagePath} should exist`);
+    expect(existsSync(packagePath), `${packagePath} should exist`).toBe(true);
   }
 });
 
 test("npm links all AgentOS workspace packages", () => {
   for (const packageName of ["core", "channels", "skills"]) {
     const linkPath = resolve(repoRoot, "node_modules", "@agentos", packageName);
-    assert.equal(existsSync(linkPath), true, `${linkPath} should exist`);
-    assert.equal(lstatSync(linkPath).isSymbolicLink(), true, `${linkPath} should be a symlink`);
+    expect(existsSync(linkPath), `${linkPath} should exist`).toBe(true);
+    expect(lstatSync(linkPath).isSymbolicLink(), `${linkPath} should be a symlink`).toBe(true);
   }
 });
 
@@ -35,5 +34,5 @@ test("the Postgres compose service accepts connections", () => {
     { cwd: repoRoot, encoding: "utf8" },
   );
 
-  assert.match(output, /accepting connections/);
+  expect(output).toMatch(/accepting connections/);
 });
