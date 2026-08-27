@@ -1,7 +1,10 @@
 {
   "name": "agent-os-chassis",
   "private": true,
-  "workspaces": ["apps/*", "packages/*"],
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
   "scripts": {
     "build": "npm run build --workspaces --if-present",
     "test": "vitest run",
@@ -11,8 +14,9 @@
     "seed": "tsx scripts/seed.ts"
   },
   "devDependencies": {
+    "dotenv": "^17.4.2",
+    "tsx": "^4.19.0",
     "typescript": "^5.7.0",
-    "vitest": "^2.1.0",
-    "tsx": "^4.19.0"
+    "vitest": "^2.1.0"
   }
 }
