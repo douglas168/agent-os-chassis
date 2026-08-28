@@ -6,3 +6,4 @@ export * from "./repositories/messages";
 export * from "./repositories/runs";
 export * from "./repositories/actions";
 export * from "./repositories/audit";
+export * from "./access";
