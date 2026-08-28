@@ -25,7 +25,11 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
     const status = /no action|no run/.test(message) ? 404
       : /cannot (approve|deny)/.test(message) ? 403
       : /already decided/.test(message) ? 409
-      : 500;
+      : null;
+    if (status === null) {
+      console.error("decideAction failed:", err);
+      return NextResponse.json({ error: "internal error" }, { status: 500 });
+    }
     return NextResponse.json({ error: message }, { status });
   }
 }

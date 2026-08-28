@@ -12,10 +12,24 @@ if (!testUrl) {
     "(see .env.example) before running `npm test`.",
   );
 }
-if (testUrl === process.env.DATABASE_URL) {
+function dbIdentity(url: string): string {
+  // Compares the connection target, not the raw string — "postgres://" vs
+  // "postgresql://" and other formatting differences must not defeat this
+  // guard the way a plain === would. Falls back to the raw string if it
+  // doesn't parse as a URL at all, so a malformed value still gets compared
+  // rather than crashing this setup file with an unrelated TypeError.
+  try {
+    const parsed = new URL(url);
+    return `${parsed.hostname}:${parsed.port}${parsed.pathname}`;
+  } catch {
+    return url;
+  }
+}
+
+if (dbIdentity(testUrl) === dbIdentity(process.env.DATABASE_URL ?? "")) {
   throw new Error(
-    "TEST_DATABASE_URL must not equal DATABASE_URL — tests delete all rows " +
-    "from several tables and would destroy your dev database.",
+    "TEST_DATABASE_URL must not point at the same database as DATABASE_URL " +
+    "— tests delete all rows from several tables and would destroy your dev database.",
   );
 }
 process.env.DATABASE_URL = testUrl;

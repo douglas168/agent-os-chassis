@@ -9,5 +9,6 @@ services:
       - "5433:5432"
     volumes:
       - agentos-postgres-data:/var/lib/postgresql/data
+      - ./docker/init-test-db.sql:/docker-entrypoint-initdb.d/init-test-db.sql:ro
 volumes:
   agentos-postgres-data:
