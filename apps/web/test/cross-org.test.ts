@@ -3,12 +3,11 @@ import { db, actions, runs, messages, auditLog, organization, member } from "@ag
 import { eq } from "drizzle-orm";
 import { auth } from "../lib/auth";
 import { matchAndRun } from "../lib/router";
-import { decideAction } from "../lib/approve";
 import { GET } from "../app/api/actions/route";
 import { PATCH } from "../app/api/actions/[id]/route";
 
 describe("cross-org access", () => {
-  let orgA: { id: string }, orgB: { id: string };
+  let orgA: { id: string };
   let ownerAHeaders: Headers, ownerBHeaders: Headers, viewerAHeaders: Headers;
   let ownerAId: string, ownerBId: string, viewerAId: string;
   let actionIdInA: string;
@@ -33,8 +32,7 @@ describe("cross-org access", () => {
     const ownerB = test.createUser({ email: "owner-b@example.com" });
     await test.saveUser(ownerB);
     ownerBId = ownerB.id;
-    const orgBResult = await auth.api.createOrganization({ body: { name: "Org B", slug: "org-b-xorg", userId: ownerB.id } });
-    orgB = { id: orgBResult!.id };
+    await auth.api.createOrganization({ body: { name: "Org B", slug: "org-b-xorg", userId: ownerB.id } });
     ownerBHeaders = await test.getAuthHeaders({ userId: ownerB.id });
 
     const viewerA = test.createUser({ email: "viewer-a@example.com" });
@@ -83,11 +81,16 @@ describe("cross-org access", () => {
   });
 
   it("a viewer in the right org still cannot approve", async () => {
-    const ctxViewerA = { orgId: orgA.id, userId: "viewer-a", role: "viewer" };
-    await expect(decideAction(ctxViewerA, actionIdInA, "approved")).rejects.toThrow(/cannot approve/);
+    const req = new Request(`http://localhost:3000/api/actions/${actionIdInA}`, {
+      method: "PATCH", headers: viewerAHeaders, body: JSON.stringify({ decision: "approved" }),
+    });
+    const res = await PATCH(req, { params: Promise.resolve({ id: actionIdInA }) });
+    expect(res.status).toBe(403);
+    const json = await res.json();
+    expect(json.error).toMatch(/cannot approve/);
   });
 
-  it("the owner of the correct org can approve", async () => {
+  it("the owner of the correct org can decide on the action (deny)", async () => {
     const req = new Request(`http://localhost:3000/api/actions/${actionIdInA}`, {
       method: "PATCH", headers: ownerAHeaders, body: JSON.stringify({ decision: "denied" }),
     });
