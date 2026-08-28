@@ -3,6 +3,8 @@ import type { db as Db } from "../db/client";
 import { actions } from "../db/schema";
 import type { OrgContext } from "../context";
 
+const pendingStatus = "pending" as const;
+
 export function createActionsRepo(db: typeof Db) {
   return {
     async create(ctx: OrgContext, input: Omit<typeof actions.$inferInsert, "id" | "orgId" | "createdAt" | "status">) {
@@ -10,7 +12,7 @@ export function createActionsRepo(db: typeof Db) {
       return row;
     },
     async listPending(ctx: OrgContext) {
-      return db.select().from(actions).where(and(eq(actions.orgId, ctx.orgId), eq(actions.status, "pending")));
+      return db.select().from(actions).where(and(eq(actions.orgId, ctx.orgId), eq(actions.status, pendingStatus)));
     },
     async findById(ctx: OrgContext, id: string) {
       const rows = await db.select().from(actions).where(and(eq(actions.orgId, ctx.orgId), eq(actions.id, id)));
@@ -19,7 +21,7 @@ export function createActionsRepo(db: typeof Db) {
     async decide(ctx: OrgContext, id: string, status: "approved" | "denied", decidedBy: string) {
       const [row] = await db.update(actions)
         .set({ status, decidedBy, decidedAt: new Date() })
-        .where(and(eq(actions.orgId, ctx.orgId), eq(actions.id, id)))
+        .where(and(eq(actions.orgId, ctx.orgId), eq(actions.id, id), eq(actions.status, "pending")))
         .returning();
       return row;
     },

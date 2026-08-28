@@ -11,12 +11,12 @@ export function createRunsRepo(db: typeof Db) {
     },
     async updateStatus(ctx: OrgContext, id: string, status: string, extra: Partial<typeof runs.$inferInsert> = {}) {
       const [row] = await db.update(runs).set({ status, updatedAt: new Date(), ...extra })
-        .where(eq(runs.id, id)).returning();
+        .where(and(eq(runs.orgId, ctx.orgId), eq(runs.id, id))).returning();
       return row;
     },
     async findByMastraRunId(ctx: OrgContext, mastraRunId: string) {
-      const rows = await db.select().from(runs).where(eq(runs.mastraRunId, mastraRunId));
-      return rows.find((r) => r.orgId === ctx.orgId) ?? null;
+      const rows = await db.select().from(runs).where(and(eq(runs.orgId, ctx.orgId), eq(runs.mastraRunId, mastraRunId)));
+      return rows[0] ?? null;
     },
     async findById(ctx: OrgContext, id: string) {
       const rows = await db.select().from(runs).where(and(eq(runs.orgId, ctx.orgId), eq(runs.id, id)));

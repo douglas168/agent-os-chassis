@@ -1,15 +1,25 @@
-import { db, resolveOrgContext, createActionsRepo, createAuditRepo, createRunsRepo } from "@agentos/core";
+import { db, createActionsRepo, createAuditRepo, createRunsRepo, can, type OrgContext } from "@agentos/core";
 import { getMastra } from "./mastra";
 
-export async function decideAction(actionId: string, decision: "approved" | "denied", decidedBy: string) {
-  const ctx = await resolveOrgContext();
+export async function decideAction(ctx: OrgContext, actionId: string, decision: "approved" | "denied") {
+  const permission = decision === "approved" ? "approve" : "deny";
+  if (!can(ctx.role, { action: [permission] })) {
+    throw new Error(`role '${ctx.role}' cannot ${permission} actions`);
+  }
+
   const actionsRepo = createActionsRepo(db);
   const runsRepo = createRunsRepo(db);
   const auditRepo = createAuditRepo(db);
 
   const action = await actionsRepo.findById(ctx, actionId);
   if (!action) throw new Error(`no action for id=${actionId}`);
-  await actionsRepo.decide(ctx, actionId, decision, decidedBy);
+
+  const decided = await actionsRepo.decide(ctx, actionId, decision, ctx.userId);
+  if (!decided) {
+    // Lost the race, or a second request against an action someone already
+    // decided — either way, never resume the workflow a second time.
+    throw new Error(`action ${actionId} was already decided`);
+  }
 
   const run = await runsRepo.findById(ctx, action.runId);
   if (!run) throw new Error(`no run for id=${action.runId}`);
@@ -28,7 +38,7 @@ export async function decideAction(actionId: string, decision: "approved" | "den
   // status is never overwritten by a later step; expiry does the same in Plan 3).
 
   await auditRepo.record(ctx, {
-    actor: decidedBy, event: `action.${decision}`, entity: "action", entityId: actionId,
+    actor: ctx.userId, event: `action.${decision}`, entity: "action", entityId: actionId,
     payload: { mastraRunId: run.mastraRunId, result: result.status },
   });
 

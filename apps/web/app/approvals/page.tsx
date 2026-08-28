@@ -16,7 +16,7 @@ export default function ApprovalsPage() {
   async function decide(id: string, decision: "approved" | "denied") {
     await fetch(`/api/actions/${id}`, {
       method: "PATCH",
-      body: JSON.stringify({ decision, decidedBy: "operator@example.com" }),
+      body: JSON.stringify({ decision }),
     });
     await refresh();
   }
