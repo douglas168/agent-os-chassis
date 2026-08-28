@@ -8,6 +8,13 @@
       "when": 1787849820560,
       "tag": "0000_right_spacker_dave",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1787895593631,
+      "tag": "0001_optimal_alice",
+      "breakpoints": true
     }
   ]
 }
