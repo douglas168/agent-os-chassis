@@ -1,17 +1,22 @@
-import { describe, it, expect, beforeAll, afterEach } from "vitest";
+import { describe, it, expect, beforeAll, afterEach, afterAll } from "vitest";
 import { eq } from "drizzle-orm";
-import { db, organizations, messages, runs, actions } from "@agentos/core";
+import { db, organization, messages, runs, actions } from "@agentos/core";
 import { matchAndRun } from "../lib/router";
 
 describe("matchAndRun", () => {
   beforeAll(async () => {
-    await db.insert(organizations).values({ name: "Router Test Org" });
+    await db.insert(organization)
+      .values({ id: crypto.randomUUID(), name: "Router Test Org", slug: "router-test-org", createdAt: new Date() });
   });
 
   afterEach(async () => {
     await db.delete(actions);
     await db.delete(runs);
     await db.delete(messages);
+  });
+
+  afterAll(async () => {
+    await db.delete(organization);
   });
 
   it("matches the echo skill, creates a suspended run, and a pending action with the draft", async () => {
