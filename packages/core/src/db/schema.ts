@@ -1,4 +1,4 @@
-import { pgTable, uuid, text, timestamp, jsonb, boolean, integer, customType } from "drizzle-orm/pg-core";
+import { pgTable, uuid, text, timestamp, jsonb, boolean, integer, customType, uniqueIndex } from "drizzle-orm/pg-core";
 import { organization } from "./auth-schema";
 
 export * from "./auth-schema";
@@ -36,6 +36,9 @@ export const runs = pgTable("runs", {
   status: text("status").notNull().default("running"),
   intent: jsonb("intent"),
   error: text("error"),
+  // Preserves the workflow step and input when a run exhausts its retries.
+  failedStep: text("failed_step"),
+  failedInput: jsonb("failed_input"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
@@ -50,9 +53,26 @@ export const actions = pgTable("actions", {
   status: text("status").notNull().default("pending"),
   decidedBy: text("decided_by"),
   decidedAt: timestamp("decided_at"),
+  expiresAt: timestamp("expires_at").notNull(),
+  executingSince: timestamp("executing_since"),
   idempotencyKey: text("idempotency_key").notNull().unique(),
+  editedDraft: jsonb("edited_draft"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
+
+export const followUps = pgTable("follow_ups", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  orgId: uuid("org_id").notNull().references(() => organization.id),
+  actionId: uuid("action_id").notNull().references(() => actions.id),
+  skillId: text("skill_id").notNull(),
+  dueAt: timestamp("due_at").notNull(),
+  status: text("status").notNull().default("scheduled"),
+  touchIndex: integer("touch_index").notNull(),
+  attempts: integer("attempts").notNull().default(0),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+}, (table) => ({
+  actionTouchUnique: uniqueIndex("follow_ups_action_touch_idx").on(table.actionId, table.touchIndex),
+}));
 
 export const auditLog = pgTable("audit_log", {
   id: uuid("id").primaryKey().defaultRandom(),

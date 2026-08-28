@@ -33,6 +33,7 @@ export async function matchAndRun(rawPayload: unknown): Promise<{ runId: string;
   const actionRow = await actionsRepo.create(ctx, {
     runId: runRow.id, skillId: skill.manifest.id, kind: (draft as any).kind ?? "reply",
     draft, idempotencyKey: `${runRow.id}:draft`,
+    expiresAt: new Date(Date.now() + skill.manifest.approvalExpiryHours * 60 * 60 * 1000),
   });
 
   const result = await workflowRun.start({ inputData: { message: inbound } });
