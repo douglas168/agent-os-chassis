@@ -11,7 +11,7 @@
     "typecheck": "npm run typecheck --workspaces --if-present",
     "db:generate": "npm run db:generate --workspace=@agentos/core",
     "db:migrate": "npm run db:migrate --workspace=@agentos/core",
-    "seed": "tsx scripts/seed.ts"
+    "seed": "tsx --env-file=.env.local scripts/seed.ts"
   },
   "devDependencies": {
     "dotenv": "^17.4.2",
