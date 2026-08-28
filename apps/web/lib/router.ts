@@ -1,10 +1,11 @@
 import { createMockChannel } from "@agentos/channels";
 import { SKILLS } from "@agentos/skills";
-import { db, resolveOrgContext, createMessagesRepo, createRunsRepo, createActionsRepo } from "@agentos/core";
+import { db, createMessagesRepo, createRunsRepo, createActionsRepo } from "@agentos/core";
 import { getMastra } from "./mastra";
+import { resolveChannelOrgContext } from "./context";
 
 export async function matchAndRun(rawPayload: unknown): Promise<{ runId: string; actionId: string; matched: boolean }> {
-  const ctx = await resolveOrgContext();
+  const ctx = await resolveChannelOrgContext();
   const channel = createMockChannel();
   const inbound = channel.normalizeInbound(rawPayload);
 

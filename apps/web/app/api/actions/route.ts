@@ -1,8 +1,9 @@
 import { NextResponse } from "next/server";
-import { db, resolveOrgContext, createActionsRepo } from "@agentos/core";
+import { db, createActionsRepo } from "@agentos/core";
+import { resolveOrgContext } from "../../../lib/context";
 
-export async function GET() {
-  const ctx = await resolveOrgContext();
+export async function GET(req: Request) {
+  const ctx = await resolveOrgContext(req.headers);
   const actionsRepo = createActionsRepo(db);
   const pending = await actionsRepo.listPending(ctx);
   return NextResponse.json(pending);
