@@ -90,11 +90,22 @@ describe("cross-org access", () => {
     expect(json.error).toMatch(/cannot approve/);
   });
 
+  it("a viewer in the right org still cannot deny", async () => {
+    const req = new Request(`http://localhost:3000/api/actions/${actionIdInA}`, {
+      method: "PATCH", headers: viewerAHeaders, body: JSON.stringify({ decision: "denied" }),
+    });
+    const res = await PATCH(req, { params: Promise.resolve({ id: actionIdInA }) });
+    expect(res.status).toBe(403);
+    const json = await res.json();
+    expect(json.error).toMatch(/cannot deny/);
+  });
+
   it("the owner of the correct org can decide on the action (deny)", async () => {
     const req = new Request(`http://localhost:3000/api/actions/${actionIdInA}`, {
       method: "PATCH", headers: ownerAHeaders, body: JSON.stringify({ decision: "denied" }),
     });
     const res = await PATCH(req, { params: Promise.resolve({ id: actionIdInA }) });
+    expect(res.status).toBe(200);
     const json = await res.json();
     expect(json.status).toBe("denied");
   });

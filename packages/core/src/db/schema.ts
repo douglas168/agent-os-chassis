@@ -1,7 +1,13 @@
-import { pgTable, uuid, text, timestamp, jsonb, boolean } from "drizzle-orm/pg-core";
+import { pgTable, uuid, text, timestamp, jsonb, boolean, integer, customType } from "drizzle-orm/pg-core";
 import { organization } from "./auth-schema";
 
 export * from "./auth-schema";
+
+const tsvector = customType<{ data: string }>({
+  dataType() {
+    return "tsvector";
+  },
+});
 
 export const messages = pgTable("messages", {
   id: uuid("id").primaryKey().defaultRandom(),
@@ -78,9 +84,9 @@ export const documents = pgTable("documents", {
   title: text("title").notNull(),
   source: text("source").notNull(), // 'upload' | 'message-attachment'
   mime: text("mime").notNull(),
-  sizeBytes: text("size_bytes").notNull(),
+  sizeBytes: integer("size_bytes").notNull(),
   storageKey: text("storage_key").notNull(),
-  extractedText: text("extracted_text"),
+  extractedText: tsvector("extracted_text"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });

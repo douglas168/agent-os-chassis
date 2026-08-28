@@ -13,7 +13,8 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
   try {
     ctx = await resolveOrgContext(req.headers);
   } catch (err) {
-    return NextResponse.json({ error: (err as Error).message }, { status: 401 });
+    console.error("resolveOrgContext failed:", err);
+    return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   }
 
   try {

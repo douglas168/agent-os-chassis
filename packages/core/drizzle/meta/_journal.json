@@ -15,6 +15,13 @@
       "when": 1787895593631,
       "tag": "0001_optimal_alice",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1787908343523,
+      "tag": "0002_misty_talisman",
+      "breakpoints": true
     }
   ]
 }
