@@ -1,9 +1,10 @@
 import { describe, it, expect, beforeAll, afterAll } from "vitest";
 import { and, eq } from "drizzle-orm";
 import { db } from "../src/db/client";
-import { organization, messages, runs } from "../src/db/schema";
+import { organization, messages, runs, contacts } from "../src/db/schema";
 import { createMessagesRepo } from "../src/repositories/messages";
 import { createRunsRepo } from "../src/repositories/runs";
+import { createContactsRepo } from "../src/repositories/contacts";
 
 describe("org-scoped repositories", () => {
   let orgA: { id: string }, orgB: { id: string };
@@ -57,5 +58,33 @@ describe("org-scoped repositories", () => {
 
     const found = await runsRepo.findByMastraRunId({ orgId: orgB.id, userId: "system", role: "owner" }, "mr-cross-org-2");
     expect(found).toBeNull();
+  });
+});
+
+describe("contacts repository", () => {
+  let org: { id: string };
+
+  beforeAll(async () => {
+    [org] = await db.insert(organization)
+      .values({ id: crypto.randomUUID(), name: "Contacts Test Org", slug: "contacts-test-org", createdAt: new Date() })
+      .returning();
+  });
+
+  afterAll(async () => {
+    await db.delete(contacts);
+    await db.delete(organization).where(eq(organization.id, org.id));
+  });
+
+  it("finds a contact whose emails array contains the given address", async () => {
+    await db.insert(contacts).values({
+      id: crypto.randomUUID(), orgId: org.id, name: "Jane", emails: ["jane@example.com", "j@example.com"],
+    });
+
+    const contactsRepo = createContactsRepo(db);
+    const found = await contactsRepo.findByEmail({ orgId: org.id, userId: "system", role: "owner" }, "j@example.com");
+    expect(found?.name).toBe("Jane");
+
+    const notFound = await contactsRepo.findByEmail({ orgId: org.id, userId: "system", role: "owner" }, "nobody@example.com");
+    expect(notFound).toBeNull();
   });
 });

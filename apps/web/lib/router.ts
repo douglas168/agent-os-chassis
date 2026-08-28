@@ -1,6 +1,6 @@
 import { createMockChannel } from "@agentos/channels";
 import { SKILLS } from "@agentos/skills";
-import { db, createMessagesRepo, createRunsRepo, createActionsRepo } from "@agentos/core";
+import { db, createMessagesRepo, createContactsRepo, createRunsRepo, createActionsRepo } from "@agentos/core";
 import { getMastra } from "./mastra";
 import { resolveChannelOrgContext } from "./context";
 
@@ -9,11 +9,15 @@ export async function matchAndRun(rawPayload: unknown): Promise<{ runId: string;
   const channel = createMockChannel();
   const inbound = channel.normalizeInbound(rawPayload);
 
+  const contactsRepo = createContactsRepo(db);
+  const contact = await contactsRepo.findByEmail(ctx, inbound.from);
+
   const messagesRepo = createMessagesRepo(db);
   const message = await messagesRepo.create(ctx, {
     channel: inbound.channel, direction: inbound.direction,
     providerMessageId: inbound.providerMessageId,
     from: inbound.from, to: inbound.to, subject: inbound.subject, body: inbound.body, raw: inbound.raw,
+    contactId: contact?.id ?? null,
   });
 
   const skill = SKILLS.find((s) => s.trigger.matches(inbound));
