@@ -22,7 +22,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
     return NextResponse.json(result);
   } catch (err) {
     const message = (err as Error).message;
-    const status = /no action|no message|no skill/.test(message) ? 404
+    const status = /no action|no .*message|no skill/.test(message) ? 404
       : /not expired/.test(message) ? 409
       : null;
     if (status === null) {

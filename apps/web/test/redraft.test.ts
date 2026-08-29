@@ -41,4 +41,17 @@ describe("redraftAction", () => {
     });
     await expect(redraftAction(ctx(), actionId)).rejects.toThrow(/not expired/i);
   });
+
+  it("reports a missing originating message for an orphaned run", async () => {
+    const { actionId } = await matchAndRun({
+      from: "customer3@example.com", to: "ops@example.com",
+      subject: "Hi", body: "Orphaned run", providerMessageId: "p-redraft-3",
+    });
+    await db.update(actions).set({ status: "expired" }).where(eq(actions.id, actionId));
+    const [actionRow] = await db.select().from(actions).where(eq(actions.id, actionId));
+    await db.update(runs).set({ messageId: null }).where(eq(runs.id, actionRow.runId));
+
+    // This is the route's widened not-found pattern for "no originating message".
+    await expect(redraftAction(ctx(), actionId)).rejects.toThrow(/no .*message/);
+  });
 });
