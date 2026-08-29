@@ -30,5 +30,14 @@ export function createActionsRepo(db: typeof Db) {
         .where(and(eq(actions.orgId, ctx.orgId), eq(actions.id, id))).returning();
       return row;
     },
+    async transitionStatus(ctx: OrgContext, id: string, from: string, to: string) {
+      const [row] = await db.update(actions)
+        // Stamp executingSince whenever a row enters "executing" — Task 8's
+        // reclaimForRetry needs this set on every entry into that state.
+        .set({ status: to, ...(to === "executing" ? { executingSince: new Date() } : {}) })
+        .where(and(eq(actions.orgId, ctx.orgId), eq(actions.id, id), eq(actions.status, from)))
+        .returning();
+      return row;
+    },
   };
 }

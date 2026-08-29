@@ -1,8 +1,8 @@
 import { createMockChannel } from "@agentos/channels";
 import { SKILLS } from "@agentos/skills";
-import { db, createMessagesRepo, createContactsRepo, createRunsRepo, createActionsRepo } from "@agentos/core";
-import { getMastra } from "./mastra";
+import { db, createMessagesRepo, createContactsRepo } from "@agentos/core";
 import { resolveChannelOrgContext } from "./context";
+import { runSkillForMessage } from "./run-skill";
 
 export async function matchAndRun(rawPayload: unknown): Promise<{ runId: string; actionId: string; matched: boolean }> {
   const ctx = await resolveChannelOrgContext();
@@ -23,25 +23,6 @@ export async function matchAndRun(rawPayload: unknown): Promise<{ runId: string;
   const skill = SKILLS.find((s) => s.trigger.matches(inbound));
   if (!skill) return { runId: "", actionId: "", matched: false };
 
-  const mastra = getMastra();
-  const workflowRun = await mastra.getWorkflow(`${skill.manifest.id}-workflow`).createRun();
-
-  const runsRepo = createRunsRepo(db);
-  const runRow = await runsRepo.create(ctx, {
-    skillId: skill.manifest.id, messageId: message.id, mastraRunId: workflowRun.runId,
-  });
-
-  const intent = await skill.understand(inbound);
-  const draft = await skill.draft(intent, inbound);
-  const actionsRepo = createActionsRepo(db);
-  const actionRow = await actionsRepo.create(ctx, {
-    runId: runRow.id, skillId: skill.manifest.id, kind: (draft as any).kind ?? "reply",
-    draft, idempotencyKey: `${runRow.id}:draft`,
-    expiresAt: new Date(Date.now() + skill.manifest.approvalExpiryHours * 60 * 60 * 1000),
-  });
-
-  const result = await workflowRun.start({ inputData: { message: inbound } });
-  await runsRepo.updateStatus(ctx, runRow.id, result.status);
-
-  return { runId: workflowRun.runId, actionId: actionRow.id, matched: true };
+  const { runId, actionId } = await runSkillForMessage(ctx, skill, inbound, message.id);
+  return { runId, actionId, matched: true };
 }
