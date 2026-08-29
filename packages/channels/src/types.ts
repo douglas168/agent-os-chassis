@@ -13,6 +13,11 @@ export type OutboundMessage = {
   to: string;
   subject?: string;
   body: string;
+  // finding 15 (sustained): the execute-boundary idempotency key from
+  // spec § 4 step 6, threaded down to whichever real channel adapter a
+  // later plan adds. The mock adapter (packages/channels/src/mock.ts)
+  // requires no change — it already stores whatever object it is given.
+  idempotencyKey?: string;
 };
 
 export type ProviderResult = { ok: boolean; providerMessageId?: string; error?: string };

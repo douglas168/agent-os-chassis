@@ -35,8 +35,20 @@ describe("echo skill", () => {
     const result = await echoSkill.execute(
       { kind: "reply", to: "customer@example.com", subject: "Re: Hi", body: "You said: Hello there" },
       channel as any,
+      { idempotencyKey: "test-action-id" },
     );
     expect(result.ok).toBe(true);
     expect(sent).toHaveLength(1);
+  });
+
+  it("execute() forwards the idempotency key onto the outbound message", async () => {
+    const sent: unknown[] = [];
+    const channel = { send: async (o: unknown) => { sent.push(o); return { ok: true }; } };
+    await echoSkill.execute(
+      { kind: "reply", to: "customer@example.com", subject: "Re: Hi", body: "You said: Hello there" },
+      channel as any,
+      { idempotencyKey: "action-abc-123" },
+    );
+    expect((sent[0] as any).idempotencyKey).toBe("action-abc-123");
   });
 });

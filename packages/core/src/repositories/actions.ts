@@ -25,6 +25,12 @@ export function createActionsRepo(db: typeof Db) {
         .returning();
       return row;
     },
+    async setEditedDraft(ctx: OrgContext, id: string, editedDraft: unknown) {
+      const [row] = await db.update(actions).set({ editedDraft })
+        .where(and(eq(actions.orgId, ctx.orgId), eq(actions.id, id), eq(actions.status, "pending")))
+        .returning();
+      return row;
+    },
     async markStatus(ctx: OrgContext, id: string, status: string) {
       const [row] = await db.update(actions).set({ status })
         .where(and(eq(actions.orgId, ctx.orgId), eq(actions.id, id))).returning();

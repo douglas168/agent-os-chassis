@@ -26,7 +26,16 @@ export async function decideAction(ctx: OrgContext, actionId: string, decision: 
 
   const mastra = getMastra();
   const workflowRun = await mastra.getWorkflow(`${run.skillId}-workflow`).createRun({ runId: run.mastraRunId });
-  const result = await workflowRun.resume({ step: "draft", resumeData: { approved: decision === "approved" } });
+  // Spec § 4.2: "Execute reads edited_draft ?? draft" — draftStep (this
+  // task's engine/mastra.ts change) now carries this straight through instead
+  // of recomputing it (Plan 1 LCD #4, closed above).
+  const resumeDraft = action.editedDraft ?? action.draft;
+  // actionId is required on resumeSchema as of this task's Step 3 (finding
+  // 15) — every real resume() call site must supply it, not only Task 7's
+  // resumeAndFinish (adversarial-plan-review round 1, judge-found
+  // transcription defect: this line originally omitted it, which would fail
+  // Zod validation on every approve in this task's own test run, Step 9).
+  const result = await workflowRun.resume({ step: "draft", resumeData: { approved: decision === "approved", draft: resumeDraft, actionId } });
 
   const runFinalStatus = result.status === "success" ? "done" : "failed";
   await runsRepo.updateStatus(ctx, run.id, runFinalStatus);
