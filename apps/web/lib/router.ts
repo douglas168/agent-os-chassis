@@ -2,7 +2,7 @@ import { createMockChannel } from "@agentos/channels";
 import { SKILLS } from "@agentos/skills";
 import { db, createMessagesRepo, createContactsRepo, createFollowUpsRepo } from "@agentos/core";
 import { resolveChannelOrgContext } from "./context";
-import { runSkillForMessage } from "./run-skill";
+import { runSkillForMessage } from "@agentos/core";
 
 export async function matchAndRun(rawPayload: unknown): Promise<{ runId: string; actionId: string; matched: boolean }> {
   const ctx = await resolveChannelOrgContext();

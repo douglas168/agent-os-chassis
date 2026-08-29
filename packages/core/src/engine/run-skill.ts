@@ -1,4 +1,7 @@
-import { db, createActionsRepo, createRunsRepo, type OrgContext } from "@agentos/core";
+import { db } from "../db/client";
+import { createActionsRepo } from "../repositories/actions";
+import { createRunsRepo } from "../repositories/runs";
+import type { OrgContext } from "../context";
 import type { Skill } from "@agentos/skills";
 import type { InboundMessage } from "@agentos/channels";
 import { getMastra } from "./mastra";

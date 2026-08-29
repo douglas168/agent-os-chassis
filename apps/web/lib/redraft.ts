@@ -1,6 +1,6 @@
 import { db, createActionsRepo, createRunsRepo, createMessagesRepo, type OrgContext } from "@agentos/core";
 import { SKILLS } from "@agentos/skills";
-import { runSkillForMessage } from "./run-skill";
+import { runSkillForMessage } from "@agentos/core";
 
 export async function redraftAction(ctx: OrgContext, actionId: string): Promise<{ runId: string; actionId: string }> {
   const actionsRepo = createActionsRepo(db);
