@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeAll, afterEach, afterAll } from "vitest";
 import { eq } from "drizzle-orm";
-import { db, organization, messages, runs, actions } from "@agentos/core";
+import { db, organization, messages, runs, actions, contacts, followUps, createFollowUpsRepo } from "@agentos/core";
 import { matchAndRun } from "../lib/router";
 
 describe("matchAndRun", () => {
@@ -10,9 +10,11 @@ describe("matchAndRun", () => {
   });
 
   afterEach(async () => {
+    await db.delete(followUps);
     await db.delete(actions);
     await db.delete(runs);
     await db.delete(messages);
+    await db.delete(contacts);
   });
 
   afterAll(async () => {
@@ -36,5 +38,28 @@ describe("matchAndRun", () => {
     expect(action.draft).toEqual({
       kind: "reply", to: "customer@example.com", subject: "Re: Hi", body: "You said: Hello there",
     });
+  });
+
+  it("cancels a contact's scheduled follow-ups when they reply", async () => {
+    const [contact] = await db.insert(contacts).values({
+      id: crypto.randomUUID(), orgId: (await db.select().from(organization))[0].id,
+      name: "Repeat Customer", emails: ["repeat@example.com"],
+    }).returning();
+
+    const first = await matchAndRun({
+      from: "repeat@example.com", to: "ops@example.com", subject: "Hi", body: "First message", providerMessageId: "p-cancel-1",
+    });
+    const followUpsRepo = createFollowUpsRepo(db);
+    await followUpsRepo.schedule(
+      { orgId: contact.orgId, userId: "system", role: "owner" },
+      { actionId: first.actionId, skillId: "echo", dueAt: new Date(Date.now() + 1000 * 60 * 60 * 24 * 3), touchIndex: 1 },
+    );
+
+    await matchAndRun({
+      from: "repeat@example.com", to: "ops@example.com", subject: "Re: Hi", body: "Second message", providerMessageId: "p-cancel-2",
+    });
+
+    const [followUp] = await db.select().from(followUps).where(eq(followUps.actionId, first.actionId));
+    expect(followUp.status).toBe("cancelled");
   });
 });

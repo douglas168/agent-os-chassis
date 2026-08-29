@@ -6,4 +6,5 @@ export * from "./repositories/contacts";
 export * from "./repositories/runs";
 export * from "./repositories/actions";
 export * from "./repositories/audit";
+export * from "./repositories/followups";
 export * from "./access";

@@ -1,6 +1,6 @@
 import { createMockChannel } from "@agentos/channels";
 import { SKILLS } from "@agentos/skills";
-import { db, createMessagesRepo, createContactsRepo } from "@agentos/core";
+import { db, createMessagesRepo, createContactsRepo, createFollowUpsRepo } from "@agentos/core";
 import { resolveChannelOrgContext } from "./context";
 import { runSkillForMessage } from "./run-skill";
 
@@ -19,6 +19,11 @@ export async function matchAndRun(rawPayload: unknown): Promise<{ runId: string;
     from: inbound.from, to: inbound.to, subject: inbound.subject, body: inbound.body, raw: inbound.raw,
     contactId: contact?.id ?? null,
   });
+
+  if (contact) {
+    const followUpsRepo = createFollowUpsRepo(db);
+    await followUpsRepo.cancelScheduledForContact(ctx, contact.id, "cancel_on_reply");
+  }
 
   const skill = SKILLS.find((s) => s.trigger.matches(inbound));
   if (!skill) return { runId: "", actionId: "", matched: false };
