@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeAll, afterEach, afterAll } from "vitest";
 import { eq } from "drizzle-orm";
-import { db, organization, messages, runs, actions, createRunsRepo } from "@agentos/core";
+import { db, organization, member, messages, runs, actions, createRunsRepo } from "@agentos/core";
 import { GET } from "../app/api/traces/route";
 import { auth } from "../lib/auth";
 
@@ -18,6 +18,13 @@ describe("GET /api/traces", () => {
   });
   afterEach(async () => { await db.delete(actions); await db.delete(runs); await db.delete(messages); });
   afterAll(async () => {
+    // member rows (auth.api.createOrganization above) reference
+    // organization.id — delete member first. Every test file in this plan
+    // shares one real Postgres DB (fileParallelism: false), so leaving the
+    // org row behind strands the next file's "exactly one org" invariant
+    // (resolveChannelOrgContext) — same pattern as cross-org.test.ts.
+    await db.delete(member);
+    await db.delete(organization);
     const ctx2 = await auth.$context;
     await ctx2.test.deleteUser(createdUserId);
   });
