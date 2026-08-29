@@ -1,4 +1,4 @@
-import { and, eq } from "drizzle-orm";
+import { and, eq, or, lt } from "drizzle-orm";
 import type { db as Db } from "../db/client";
 import { actions } from "../db/schema";
 import type { OrgContext } from "../context";
@@ -42,6 +42,26 @@ export function createActionsRepo(db: typeof Db) {
         // reclaimForRetry needs this set on every entry into that state.
         .set({ status: to, ...(to === "executing" ? { executingSince: new Date() } : {}) })
         .where(and(eq(actions.orgId, ctx.orgId), eq(actions.id, id), eq(actions.status, from)))
+        .returning();
+      return row;
+    },
+    async reclaimForRetry(ctx: OrgContext, id: string, staleExecutingMs: number) {
+      const staleCutoff = new Date(Date.now() - staleExecutingMs);
+      // Claims either a normal "failed" row, or an "executing" row stranded
+      // long enough (LCD10) that it is treated as abandoned rather than
+      // genuinely in flight — the latter clause is what lets a crash between
+      // transitionStatus's claim and resumeAndFinish's completion (finding 15)
+      // recover at all; the former is retryAction's original behavior.
+      const [row] = await db.update(actions)
+        .set({ status: "executing", executingSince: new Date() })
+        .where(and(
+          eq(actions.orgId, ctx.orgId),
+          eq(actions.id, id),
+          or(
+            eq(actions.status, "failed"),
+            and(eq(actions.status, "executing"), lt(actions.executingSince, staleCutoff)),
+          ),
+        ))
         .returning();
       return row;
     },

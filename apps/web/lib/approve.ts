@@ -92,3 +92,39 @@ export async function decideAction(ctx: OrgContext, actionId: string, decision: 
 }
 
 export { resumeAndFinish };
+
+// 10 minutes — long enough to survive a slow but genuinely in-flight
+// resumeAndFinish call (echo's mock channel is near-instant, but a real
+// channel adapter or a loaded Mastra store could take longer); short
+// enough that an operator hitting "retry" on a truly stranded row doesn't
+// wait long. LCD10 — not a measured figure, a disclosed policy choice.
+const STALE_EXECUTING_MS = 10 * 60 * 1000;
+
+export async function retryAction(ctx: OrgContext, actionId: string) {
+  if (!can(ctx.role, { action: ["approve"] })) {
+    throw new Error(`role '${ctx.role}' cannot retry actions`);
+  }
+
+  const actionsRepo = createActionsRepo(db);
+  const runsRepo = createRunsRepo(db);
+
+  const action = await actionsRepo.findById(ctx, actionId);
+  if (!action) throw new Error(`no action for id=${actionId}`);
+
+  // finding 15 (reclaim half, sustained): previously only "failed" ->
+  // "executing" was claimable, so a row stranded in "executing" by a crash
+  // (between this task's own transitionStatus claim, or Task 7's
+  // decideAction's approved -> executing claim, and resumeAndFinish
+  // completing) had no path back at all.
+  const claimed = await actionsRepo.reclaimForRetry(ctx, actionId, STALE_EXECUTING_MS);
+  if (!claimed) {
+    throw new Error(`action ${actionId} is not in a retryable state`);
+  }
+
+  const run = await runsRepo.findById(ctx, action.runId);
+  if (!run) throw new Error(`no run for id=${action.runId}`);
+
+  const resumeDraft = action.editedDraft ?? action.draft;
+  const status = await resumeAndFinish(ctx, actionId, run.id, run.mastraRunId, action.skillId, resumeDraft);
+  return { status, actionId };
+}
