@@ -48,4 +48,11 @@ describe("GET /api/traces", () => {
     // in the DB but never asserted end-to-end through the API response.
     expect(json[0].failedInput).toEqual({ draft: {} });
   });
+
+  it("returns 401 when the caller has no session", async () => {
+    const req = new Request("http://localhost:3000/api/traces");
+    const res = await GET(req);
+
+    expect(res.status).toBe(401);
+  });
 });

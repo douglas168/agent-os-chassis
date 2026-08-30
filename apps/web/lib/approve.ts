@@ -4,6 +4,7 @@ import { extractFailedStep } from "./trace-extract";
 
 async function resumeAndFinish(
   ctx: OrgContext, actionId: string, runId: string, mastraRunId: string, skillId: string, resumeDraft: unknown,
+  trigger: "approved" | "retried",
 ): Promise<string> {
   const runsRepo = createRunsRepo(db);
   const actionsRepo = createActionsRepo(db);
@@ -42,7 +43,7 @@ async function resumeAndFinish(
   await actionsRepo.markStatus(ctx, actionId, runFinalStatus);
   await auditRepo.record(ctx, {
     actor: ctx.userId, event: "action.executed", entity: "action", entityId: actionId,
-    payload: { mastraRunId, result: result.status },
+    payload: { mastraRunId, result: result.status, trigger },
   });
 
   return runFinalStatus;
@@ -70,9 +71,19 @@ export async function decideAction(ctx: OrgContext, actionId: string, decision: 
   if (!run) throw new Error(`no run for id=${action.runId}`);
 
   if (decision === "denied") {
-    const workflowRun = await getMastra().getWorkflow(`${action.skillId}-workflow`).createRun({ runId: run.mastraRunId });
     const resumeDraft = action.editedDraft ?? action.draft;
-    const result = await workflowRun.resume({ step: "draft", resumeData: { approved: false, draft: resumeDraft, actionId } });
+    let result;
+    try {
+      const workflowRun = await getMastra().getWorkflow(`${action.skillId}-workflow`).createRun({ runId: run.mastraRunId });
+      result = await workflowRun.resume({ step: "draft", resumeData: { approved: false, draft: resumeDraft, actionId } });
+    } catch (err) {
+      await runsRepo.updateStatus(ctx, run.id, "failed", { error: (err as Error).message });
+      await auditRepo.record(ctx, {
+        actor: ctx.userId, event: "action.execute_failed", entity: "action", entityId: actionId,
+        payload: { error: (err as Error).message },
+      });
+      throw new Error(`action ${actionId} execution failed: ${(err as Error).message}`);
+    }
     await runsRepo.updateStatus(ctx, run.id, result.status === "success" ? "done" : "failed");
     await auditRepo.record(ctx, {
       actor: ctx.userId, event: "action.denied", entity: "action", entityId: actionId,
@@ -87,7 +98,7 @@ export async function decideAction(ctx: OrgContext, actionId: string, decision: 
   }
 
   const resumeDraft = action.editedDraft ?? action.draft;
-  const status = await resumeAndFinish(ctx, actionId, run.id, run.mastraRunId, action.skillId, resumeDraft);
+  const status = await resumeAndFinish(ctx, actionId, run.id, run.mastraRunId, action.skillId, resumeDraft, "approved");
   return { status, actionId };
 }
 
@@ -125,6 +136,6 @@ export async function retryAction(ctx: OrgContext, actionId: string) {
   if (!run) throw new Error(`no run for id=${action.runId}`);
 
   const resumeDraft = action.editedDraft ?? action.draft;
-  const status = await resumeAndFinish(ctx, actionId, run.id, run.mastraRunId, action.skillId, resumeDraft);
+  const status = await resumeAndFinish(ctx, actionId, run.id, run.mastraRunId, action.skillId, resumeDraft, "retried");
   return { status, actionId };
 }

@@ -42,6 +42,17 @@ describe("redraftAction", () => {
     await expect(redraftAction(ctx(), actionId)).rejects.toThrow(/not expired/i);
   });
 
+  it("a viewer role cannot redraft an expired action", async () => {
+    const { actionId } = await matchAndRun({
+      from: "customer3@example.com", to: "ops@example.com",
+      subject: "Hi", body: "Expired message", providerMessageId: "p-redraft-viewer",
+    });
+    await db.update(actions).set({ status: "expired" }).where(eq(actions.id, actionId));
+    const viewerCtx = { orgId, userId: "viewer@example.com", role: "viewer" };
+
+    await expect(redraftAction(viewerCtx, actionId)).rejects.toThrow(/cannot redraft/i);
+  });
+
   it("reports a missing originating message for an orphaned run", async () => {
     const { actionId } = await matchAndRun({
       from: "customer3@example.com", to: "ops@example.com",

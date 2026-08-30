@@ -1,8 +1,12 @@
-import { db, createActionsRepo, createRunsRepo, createMessagesRepo, type OrgContext } from "@agentos/core";
+import { db, createActionsRepo, createRunsRepo, createMessagesRepo, can, type OrgContext } from "@agentos/core";
 import { SKILLS } from "@agentos/skills";
 import { runSkillForMessage } from "@agentos/core";
 
 export async function redraftAction(ctx: OrgContext, actionId: string): Promise<{ runId: string; actionId: string }> {
+  if (!can(ctx.role, { action: ["approve"] })) {
+    throw new Error(`role '${ctx.role}' cannot redraft actions`);
+  }
+
   const actionsRepo = createActionsRepo(db);
   const runsRepo = createRunsRepo(db);
   const messagesRepo = createMessagesRepo(db);

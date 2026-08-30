@@ -40,6 +40,11 @@ describe("retryAction", () => {
     const retried = await retryAction(ctx(), actionId);
     expect(retried.status).toBe("done");
 
+    const [entry] = (await db.select().from(auditLog).where(eq(auditLog.entityId, actionId)))
+      .filter((candidate) => candidate.event === "action.executed");
+    expect(entry.event).toBe("action.executed");
+    expect(entry.payload).toMatchObject({ trigger: "retried" });
+
     const [doneAction] = await db.select().from(actions).where(eq(actions.id, actionId));
     expect(doneAction.status).toBe("done");
   });

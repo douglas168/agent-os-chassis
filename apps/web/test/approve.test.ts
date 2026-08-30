@@ -35,6 +35,7 @@ describe("decideAction", () => {
     expect(action.status).toBe("done");
     const [entry] = await db.select().from(auditLog);
     expect(entry.event).toBe("action.executed");
+    expect(entry.payload).toMatchObject({ trigger: "approved" });
   });
 
   it("denying a pending action resumes the workflow without sending, and leaves status denied", async () => {
@@ -48,6 +49,26 @@ describe("decideAction", () => {
 
     const [action] = await db.select().from(actions).where(eq(actions.id, actionId));
     expect(action.status).toBe("denied");
+  });
+
+  it("F-fix5: a deny-path resume() that throws still updates the run and writes an audit row", async () => {
+    const { actionId } = await matchAndRun({
+      from: "customer-deny-fail@example.com", to: "ops@example.com",
+      subject: "Hi", body: "Deny-fail message", providerMessageId: "p-approve-deny-fail",
+    });
+    const ctx = { orgId, userId: "operator@example.com", role: "owner" };
+
+    const [action] = await db.select().from(actions).where(eq(actions.id, actionId));
+    const [run] = await db.select().from(runs).where(eq(runs.id, action.runId));
+    await db.update(runs).set({ mastraRunId: "does-not-exist-in-mastra" }).where(eq(runs.id, run.id));
+
+    await expect(decideAction(ctx, actionId, "denied")).rejects.toThrow(/execution failed/i);
+
+    const [failedRun] = await db.select().from(runs).where(eq(runs.id, run.id));
+    expect(failedRun.status).toBe("failed");
+
+    const entries = await db.select().from(auditLog).where(eq(auditLog.entityId, actionId));
+    expect(entries.some((e) => e.event === "action.execute_failed")).toBe(true);
   });
 
   it("transitions approved -> executing before resuming the workflow", async () => {
@@ -86,7 +107,7 @@ describe("decideAction", () => {
     const [action] = await db.select().from(actions).where(eq(actions.id, actionId));
     const [run] = await db.select().from(runs).where(eq(runs.id, action.runId));
 
-    const status = await resumeAndFinish(ctx, actionId, run.id, run.mastraRunId, action.skillId, null);
+    const status = await resumeAndFinish(ctx, actionId, run.id, run.mastraRunId, action.skillId, null, "approved");
     expect(status).toBe("failed");
 
     const [failedAction] = await db.select().from(actions).where(eq(actions.id, actionId));
