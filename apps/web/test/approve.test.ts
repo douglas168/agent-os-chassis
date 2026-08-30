@@ -69,6 +69,12 @@ describe("decideAction", () => {
 
     const entries = await db.select().from(auditLog).where(eq(auditLog.entityId, actionId));
     expect(entries.some((e) => e.event === "action.execute_failed")).toBe(true);
+
+    const [failedAction] = await db.select().from(actions).where(eq(actions.id, actionId));
+    expect(failedAction.status).toBe("denied");
+
+    const [failedEntry] = entries.filter((e) => e.event === "action.execute_failed");
+    expect(failedEntry.payload).toMatchObject({ trigger: "denied" });
   });
 
   it("transitions approved -> executing before resuming the workflow", async () => {
@@ -97,6 +103,9 @@ describe("decideAction", () => {
 
     const entries = await db.select().from(auditLog).where(eq(auditLog.entityId, actionId));
     expect(entries.some((e) => e.event === "action.execute_failed")).toBe(true);
+
+    const [failedEntry] = entries.filter((e) => e.event === "action.execute_failed");
+    expect(failedEntry.payload).toMatchObject({ trigger: "approved" });
   });
 
   it("a genuine step-logic failure (not a resume()-level throw) produces a real failed WorkflowResult that extractFailedStep reads correctly", async () => {

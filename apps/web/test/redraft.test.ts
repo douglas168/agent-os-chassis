@@ -50,7 +50,10 @@ describe("redraftAction", () => {
     await db.update(actions).set({ status: "expired" }).where(eq(actions.id, actionId));
     const viewerCtx = { orgId, userId: "viewer@example.com", role: "viewer" };
 
+    const before = await db.select().from(actions).where(eq(actions.orgId, orgId));
     await expect(redraftAction(viewerCtx, actionId)).rejects.toThrow(/cannot redraft/i);
+    const after = await db.select().from(actions).where(eq(actions.orgId, orgId));
+    expect(after.length).toBe(before.length);
   });
 
   it("reports a missing originating message for an orphaned run", async () => {

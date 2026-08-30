@@ -29,7 +29,7 @@ async function resumeAndFinish(
     await runsRepo.updateStatus(ctx, runId, "failed", { error: (err as Error).message });
     await auditRepo.record(ctx, {
       actor: ctx.userId, event: "action.execute_failed", entity: "action", entityId: actionId,
-      payload: { error: (err as Error).message },
+      payload: { error: (err as Error).message, trigger },
     });
     throw new Error(`action ${actionId} execution failed: ${(err as Error).message}`);
   }
@@ -80,7 +80,7 @@ export async function decideAction(ctx: OrgContext, actionId: string, decision: 
       await runsRepo.updateStatus(ctx, run.id, "failed", { error: (err as Error).message });
       await auditRepo.record(ctx, {
         actor: ctx.userId, event: "action.execute_failed", entity: "action", entityId: actionId,
-        payload: { error: (err as Error).message },
+        payload: { error: (err as Error).message, trigger: "denied" },
       });
       throw new Error(`action ${actionId} execution failed: ${(err as Error).message}`);
     }
