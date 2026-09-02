@@ -50,6 +50,13 @@
       "when": 1788341179691,
       "tag": "0006_brainy_clint_barton",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1788348715916,
+      "tag": "0007_nasty_jetstream",
+      "breakpoints": true
     }
   ]
 }
