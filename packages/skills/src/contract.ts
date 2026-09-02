@@ -8,7 +8,9 @@ export type SkillManifest = {
   approvalExpiryHours: number;
 };
 
-export type SkillTrigger = { matches: (message: InboundMessage) => boolean };
+export type SkillTrigger =
+  | { kind: "message"; matches: (message: InboundMessage) => boolean }
+  | { kind: "cron"; intervalMs: number };
 
 export type Skill<Intent = unknown, Draft = unknown> = {
   manifest: SkillManifest;
@@ -16,6 +18,7 @@ export type Skill<Intent = unknown, Draft = unknown> = {
   understand: (message: InboundMessage) => Promise<Intent>;
   draft: (intent: Intent, message: InboundMessage) => Promise<Draft>;
   execute: (approvedDraft: Draft, channel: Pick<ChannelAdapter, "send">, opts: { idempotencyKey: string }) => Promise<ProviderResult>;
+  intentSchema: z.ZodType<Intent>;
   // Spec § 4.2: re-validated against on every edit before it's allowed to execute.
   draftSchema: z.ZodType<Draft>;
   editableFields: readonly string[];

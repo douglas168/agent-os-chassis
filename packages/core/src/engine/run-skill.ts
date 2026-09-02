@@ -11,13 +11,14 @@ export async function runSkillForMessage(
   skill: Skill<any, any>,
   inbound: InboundMessage,
   messageId: string,
+  entityRef: { table: string; id: string } | null = null,
 ): Promise<{ runId: string; actionId: string }> {
   const mastra = getMastra();
   const workflowRun = await mastra.getWorkflow(`${skill.manifest.id}-workflow`).createRun();
 
   const runsRepo = createRunsRepo(db);
   const runRow = await runsRepo.create(ctx, {
-    skillId: skill.manifest.id, messageId, mastraRunId: workflowRun.runId,
+    skillId: skill.manifest.id, messageId, mastraRunId: workflowRun.runId, entityRef,
   });
 
   const intent = await skill.understand(inbound);
@@ -29,7 +30,9 @@ export async function runSkillForMessage(
     draft, idempotencyKey: `${runRow.id}:draft`, expiresAt,
   });
 
-  const result = await workflowRun.start({ inputData: { message: inbound } });
+  // LCD4 (ingest half): thread the values already computed above into the
+  // workflow's own understand/draft steps instead of letting them recompute.
+  const result = await workflowRun.start({ inputData: { message: inbound, intent, draft } });
   await runsRepo.updateStatus(ctx, runRow.id, result.status);
 
   return { runId: workflowRun.runId, actionId: actionRow.id };

@@ -9,11 +9,12 @@ const message: InboundMessage = {
 
 describe("echo skill", () => {
   it("triggers on mock channel messages", () => {
-    expect(echoSkill.trigger.matches(message)).toBe(true);
+    expect(echoSkill.trigger.kind).toBe("message");
+    expect(echoSkill.trigger.kind === "message" && echoSkill.trigger.matches(message)).toBe(true);
   });
 
   it("does not trigger on other channels", () => {
-    expect(echoSkill.trigger.matches({ ...message, channel: "email" })).toBe(false);
+    expect(echoSkill.trigger.kind === "message" && echoSkill.trigger.matches({ ...message, channel: "email" })).toBe(false);
   });
 
   it("understand() extracts the inbound text as intent", async () => {

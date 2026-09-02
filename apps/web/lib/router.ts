@@ -25,7 +25,7 @@ export async function matchAndRun(rawPayload: unknown): Promise<{ runId: string;
     await followUpsRepo.cancelScheduledForContact(ctx, contact.id, "cancel_on_reply");
   }
 
-  const skill = SKILLS.find((s) => s.trigger.matches(inbound));
+  const skill = SKILLS.find((s) => s.trigger.kind === "message" && s.trigger.matches(inbound));
   if (!skill) return { runId: "", actionId: "", matched: false };
 
   const { runId, actionId } = await runSkillForMessage(ctx, skill, inbound, message.id);

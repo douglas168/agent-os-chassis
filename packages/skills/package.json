@@ -4,6 +4,11 @@
   "type": "module",
   "main": "src/index.ts",
   "scripts": { "typecheck": "tsc --noEmit" },
-  "dependencies": { "@agentos/channels": "*" },
+  "dependencies": {
+    "@agentos/channels": "*",
+    "@mastra/core": "1.62.0",
+    "@mastra/pg": "^1.22.0",
+    "zod": "^3.25.0"
+  },
   "devDependencies": { "typescript": "^5.7.0" }
 }
