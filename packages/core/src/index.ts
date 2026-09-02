@@ -14,4 +14,5 @@ export * from "./engine/expiry";
 export * from "./engine/followup-sweep";
 export * from "./engine/followup-schedule";
 export * from "./engine/cron-sweep";
+export * from "./engine/entity-view";
 export * from "./storage";
