@@ -31,10 +31,21 @@ export function createActionsRepo(db: typeof Db) {
         .returning();
       return row;
     },
-    async markStatus(ctx: OrgContext, id: string, status: string) {
-      const [row] = await db.update(actions).set({ status })
-        .where(and(eq(actions.orgId, ctx.orgId), eq(actions.id, id))).returning();
-      return row;
+    async releaseExecuting(ctx: OrgContext, id: string, expectedExecutingSince: Date, status: "done" | "failed") {
+      // finding 3 (Plan 3 final review): the predicate has to identify the
+      // *claim* (status AND the executingSince it was stamped with), not
+      // just the state — a status-only CAS lets a reclaimer's fresh claim
+      // get overwritten by a stale attempt that still thinks it owns the row.
+      const [row] = await db.update(actions)
+        .set({ status })
+        .where(and(
+          eq(actions.orgId, ctx.orgId),
+          eq(actions.id, id),
+          eq(actions.status, "executing"),
+          eq(actions.executingSince, expectedExecutingSince),
+        ))
+        .returning();
+      return row ?? null;
     },
     async transitionStatus(ctx: OrgContext, id: string, from: string, to: string) {
       const [row] = await db.update(actions)

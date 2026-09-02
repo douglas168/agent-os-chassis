@@ -4,7 +4,7 @@ import { extractFailedStep } from "./trace-extract";
 
 async function resumeAndFinish(
   ctx: OrgContext, actionId: string, runId: string, mastraRunId: string, skillId: string, resumeDraft: unknown,
-  trigger: "approved" | "retried",
+  trigger: "approved" | "retried", executingSince: Date,
 ): Promise<string> {
   const runsRepo = createRunsRepo(db);
   const actionsRepo = createActionsRepo(db);
@@ -20,27 +20,34 @@ async function resumeAndFinish(
     // supply it.
     result = await workflowRun.resume({ step: "draft", resumeData: { approved: true, draft: resumeDraft, actionId } });
   } catch (err) {
-    // F34 (Plan 2 final review): resume() threw before Mastra recorded any
-    // terminal result. Without this catch, the action stays "executing"
-    // forever with no audit row and no way to retry (actions.decide only
-    // fires from "pending", and transitionStatus's claim already consumed
-    // "approved"). Task 8's retryAction is what re-attempts from here.
-    await actionsRepo.markStatus(ctx, actionId, "failed");
-    await runsRepo.updateStatus(ctx, runId, "failed", { error: (err as Error).message });
-    await auditRepo.record(ctx, {
-      actor: ctx.userId, event: "action.execute_failed", entity: "action", entityId: actionId,
-      payload: { error: (err as Error).message, trigger },
-    });
+    // finding 3 (Plan 3 final review, closed here): releaseExecuting CAS's
+    // on the executingSince this call observed at claim time. If another
+    // claimer has since reclaimed the row, this stale attempt's release is a
+    // no-op — it must not touch runs/audit either, since the new claimer
+    // owns the outcome now.
+    const released = await actionsRepo.releaseExecuting(ctx, actionId, executingSince, "failed");
+    if (released) {
+      await runsRepo.updateStatus(ctx, runId, "failed", { error: (err as Error).message });
+      await auditRepo.record(ctx, {
+        actor: ctx.userId, event: "action.execute_failed", entity: "action", entityId: actionId,
+        payload: { error: (err as Error).message, trigger },
+      });
+    }
     throw new Error(`action ${actionId} execution failed: ${(err as Error).message}`);
   }
 
   const { failedStep, failedInput } = extractFailedStep(result);
   const runFinalStatus = result.status === "success" ? "done" : "failed";
+  const released = await actionsRepo.releaseExecuting(ctx, actionId, executingSince, runFinalStatus);
+  if (!released) {
+    // Another claimer's reclaim superseded this attempt's lease between our
+    // resume() call and this write — that claimer owns runs/audit now.
+    return "superseded";
+  }
   await runsRepo.updateStatus(ctx, runId, runFinalStatus, {
     error: result.status === "success" ? null : ((result as any).error?.message ?? null),
     failedStep, failedInput,
   });
-  await actionsRepo.markStatus(ctx, actionId, runFinalStatus);
   await auditRepo.record(ctx, {
     actor: ctx.userId, event: "action.executed", entity: "action", entityId: actionId,
     payload: { mastraRunId, result: result.status, trigger },
@@ -98,7 +105,10 @@ export async function decideAction(ctx: OrgContext, actionId: string, decision: 
   }
 
   const resumeDraft = action.editedDraft ?? action.draft;
-  const status = await resumeAndFinish(ctx, actionId, run.id, run.mastraRunId, action.skillId, resumeDraft, "approved");
+  // `!`: transitionStatus only returns a row when its CAS UPDATE matched,
+  // and that UPDATE just set executingSince — non-null in practice even
+  // though the column (and this return type) is nullable (finding 9).
+  const status = await resumeAndFinish(ctx, actionId, run.id, run.mastraRunId, action.skillId, resumeDraft, "approved", claimed.executingSince!);
   return { status, actionId };
 }
 
@@ -136,6 +146,6 @@ export async function retryAction(ctx: OrgContext, actionId: string) {
   if (!run) throw new Error(`no run for id=${action.runId}`);
 
   const resumeDraft = action.editedDraft ?? action.draft;
-  const status = await resumeAndFinish(ctx, actionId, run.id, run.mastraRunId, action.skillId, resumeDraft, "retried");
+  const status = await resumeAndFinish(ctx, actionId, run.id, run.mastraRunId, action.skillId, resumeDraft, "retried", claimed.executingSince!);
   return { status, actionId };
 }
