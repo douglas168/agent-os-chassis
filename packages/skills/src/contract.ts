@@ -15,8 +15,9 @@ export type SkillTrigger =
 export type EntityStage = { key: string; label: string };
 export type EntityField = { label: string; value: string };
 export type EntityViewData = {
-  id: string; title: string; subtitle?: string;
+  id: string; skillId: string; title: string; subtitle?: string;
   fields: EntityField[]; stages: EntityStage[]; currentStage: string;
+  runs: Record<string, unknown>[];
 };
 // table + stage list + a pure row -> display mapper — no I/O. The actual
 // row loading lives in packages/core/src/engine/entity-view.ts (see this

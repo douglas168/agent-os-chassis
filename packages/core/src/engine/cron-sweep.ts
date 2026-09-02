@@ -24,6 +24,13 @@ export async function sweepArReminderCron(): Promise<{ triggered: number }> {
       if (!contact) continue;
       const contactEmails = contact.emails as string[];
 
+      // This is a synthetic, cron-fabricated inbound message—not a real customer reply—used
+      // to drive the AR-reminder skill's message-shaped trigger. It is distinguishable from
+      // genuine inbound traffic only by the ar-reminder-cron- prefix on providerMessageId;
+      // a human looking at /traces would not notice, because from and body look real. This is
+      // a known, disclosed limitation of the cron-trigger pattern, not a bug. A forker adding
+      // a real cron-triggered skill should preserve this prefix convention or add
+      // synthetic: true to raw if its skill's trace UI needs to distinguish the message.
       const inbound = {
         channel: "mock" as const, direction: "in" as const,
         from: contactEmails[0] ?? "unknown@example.com", to: "ops@example.com",

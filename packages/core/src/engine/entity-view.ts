@@ -2,14 +2,14 @@ import { and, eq } from "drizzle-orm";
 import { db } from "../db/client";
 import { contacts } from "../db/schema";
 import { createRunsRepo } from "../repositories/runs";
-import { SKILLS, skillArInvoices } from "@agentos/skills";
+import { SKILLS, skillArInvoices, type EntityViewData } from "@agentos/skills";
 import type { OrgContext } from "../context";
 
 // One entry today — the second skill-owned table is what would justify
 // generalizing this into a dynamic registry (Least-confident decision #3).
 const ENTITY_TABLES: Record<string, typeof skillArInvoices> = { skill_ar_invoices: skillArInvoices };
 
-export async function loadEntityView(ctx: OrgContext, entityId: string) {
+export async function loadEntityView(ctx: OrgContext, entityId: string): Promise<EntityViewData | null> {
   for (const skill of SKILLS) {
     if (!skill.entity) continue;
     const table = ENTITY_TABLES[skill.entity.table];
