@@ -1,5 +1,6 @@
-import { describe, it, expect, beforeAll, afterEach, afterAll } from "vitest";
-import { eq } from "drizzle-orm";
+import { describe, it, expect, beforeAll, afterEach, afterAll, vi } from "vitest";
+import { and, eq } from "drizzle-orm";
+import { PgUpdateBuilder } from "drizzle-orm/pg-core";
 import { db, organization, contacts, messages, runs, actions, auditLog, followUps, sweepArReminderCron } from "@agentos/core";
 // finding 14 (adversarial review round 1): `skillArInvoices` is a
 // @agentos/skills export, not re-exported through @agentos/core (Task 5's
@@ -77,6 +78,31 @@ describe("ar-reminder — full loop (spec § 10)", () => {
 
     const afterReply = await db.select().from(followUps).where(eq(followUps.actionId, action.id));
     expect(afterReply.every((f) => f.status === "cancelled")).toBe(true);
+  });
+
+  it("scopes the cron stage-flip UPDATE to the invoice's organization", async () => {
+    await db.update(skillArInvoices).set({ stage: "issued", updatedAt: new Date() })
+      .where(and(eq(skillArInvoices.id, invoiceId), eq(skillArInvoices.orgId, orgId)));
+
+    const setSpy = vi.spyOn(PgUpdateBuilder.prototype, "set");
+    try {
+      await sweepArReminderCron();
+
+      const invoiceUpdate = setSpy.mock.results
+        .map((result) => result.value)
+        .find((value): value is { toSQL: () => { sql: string; params: unknown[] } } => {
+          if (!value || typeof value !== "object" || !("toSQL" in value) || typeof value.toSQL !== "function") return false;
+          return value.toSQL().sql.includes("skill_ar_invoices");
+        });
+      expect(invoiceUpdate).toBeDefined();
+
+      const query = invoiceUpdate!.toSQL();
+      expect(query.sql).toContain('"skill_ar_invoices"."id"');
+      expect(query.sql).toContain('"skill_ar_invoices"."org_id"');
+      expect(query.params).toContain(orgId);
+    } finally {
+      setSpy.mockRestore();
+    }
   });
 
   it("is idempotent — an invoice already moved past 'issued' is not re-triggered by a second sweep", async () => {

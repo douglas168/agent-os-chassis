@@ -53,7 +53,8 @@ export async function sweepArReminderCron(): Promise<{ triggered: number }> {
       // design already rules out a concurrent second sweep process — the
       // in-process guard in apps/worker/src/index.ts covers overlapping
       // ticks within that one process).
-      await db.update(skillArInvoices).set({ stage: "reminded", updatedAt: new Date() }).where(eq(skillArInvoices.id, invoice.id));
+      await db.update(skillArInvoices).set({ stage: "reminded", updatedAt: new Date() })
+        .where(and(eq(skillArInvoices.id, invoice.id), eq(skillArInvoices.orgId, org.id)));
       triggered += 1;
     }
   }

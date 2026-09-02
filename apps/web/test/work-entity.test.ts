@@ -67,6 +67,15 @@ describe("GET /api/work/[entityId]", () => {
     expect(res.status).toBe(404);
   });
 
+  it("returns 400 with a JSON error for a malformed entity id", async () => {
+    const headers = await (await auth.$context).test.getAuthHeaders({ userId: createdUserId });
+    const malformedId = "not-a-uuid";
+    const req = new Request(`http://localhost:3000/api/work/${malformedId}`, { headers });
+    const res = await GET(req, { params: Promise.resolve({ entityId: malformedId }) });
+    expect(res.status).toBe(400);
+    await expect(res.json()).resolves.toMatchObject({ error: "invalid entity id" });
+  });
+
   it("returns 401 when the caller has no session", async () => {
     const req = new Request(`http://localhost:3000/api/work/${invoiceId}`);
     const res = await GET(req, { params: Promise.resolve({ entityId: invoiceId }) });
