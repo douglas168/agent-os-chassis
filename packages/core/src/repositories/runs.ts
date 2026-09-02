@@ -1,4 +1,4 @@
-import { and, eq, desc } from "drizzle-orm";
+import { and, eq, desc, sql } from "drizzle-orm";
 import type { db as Db } from "../db/client";
 import { runs } from "../db/schema";
 import type { OrgContext } from "../context";
@@ -24,6 +24,11 @@ export function createRunsRepo(db: typeof Db) {
     },
     async listForOrg(ctx: OrgContext) {
       return db.select().from(runs).where(eq(runs.orgId, ctx.orgId)).orderBy(desc(runs.createdAt));
+    },
+    async findForEntity(ctx: OrgContext, entityRef: { table: string; id: string }) {
+      return db.select().from(runs).where(
+        and(eq(runs.orgId, ctx.orgId), sql`${runs.entityRef} @> ${JSON.stringify(entityRef)}::jsonb`),
+      ).orderBy(desc(runs.createdAt));
     },
   };
 }

@@ -35,6 +35,11 @@ export const runs = pgTable("runs", {
   mastraRunId: text("mastra_run_id").notNull(),
   status: text("status").notNull().default("running"),
   intent: jsonb("intent"),
+  // Spec § 8.1: nullable { table, id } set only for runs about a
+  // skill-owned record — what makes "the runs touching this record" a
+  // query rather than a guess. Written only by cron-triggered runs (Task 6);
+  // every message-triggered run leaves it null (Least-confident decision #8).
+  entityRef: jsonb("entity_ref"),
   error: text("error"),
   // Preserves the workflow step and input when a run exhausts its retries.
   failedStep: text("failed_step"),

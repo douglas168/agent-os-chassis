@@ -1,0 +1,1 @@
+ALTER TABLE "runs" ADD COLUMN "entity_ref" jsonb;

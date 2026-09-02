@@ -43,6 +43,13 @@
       "when": 1787958779863,
       "tag": "0005_white_triathlon",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1788341179691,
+      "tag": "0006_brainy_clint_barton",
+      "breakpoints": true
     }
   ]
 }

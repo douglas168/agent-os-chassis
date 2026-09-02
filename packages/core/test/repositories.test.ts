@@ -59,6 +59,23 @@ describe("org-scoped repositories", () => {
     const found = await runsRepo.findByMastraRunId({ orgId: orgB.id, userId: "system", role: "owner" }, "mr-cross-org-2");
     expect(found).toBeNull();
   });
+
+  it("findForEntity returns only runs whose entity_ref matches the given table+id, scoped to the calling org", async () => {
+    const runsRepo = createRunsRepo(db);
+    const target = await runsRepo.create({ orgId: orgA.id, userId: "system", role: "owner" }, {
+      skillId: "ar-reminder", mastraRunId: "mr-entity-1", entityRef: { table: "skill_ar_invoices", id: "inv-1" },
+    });
+    await runsRepo.create({ orgId: orgA.id, userId: "system", role: "owner" }, {
+      skillId: "ar-reminder", mastraRunId: "mr-entity-2", entityRef: { table: "skill_ar_invoices", id: "inv-2" },
+    });
+    await runsRepo.create({ orgId: orgB.id, userId: "system", role: "owner" }, {
+      skillId: "ar-reminder", mastraRunId: "mr-entity-3", entityRef: { table: "skill_ar_invoices", id: "inv-1" },
+    });
+
+    const found = await runsRepo.findForEntity({ orgId: orgA.id, userId: "system", role: "owner" }, { table: "skill_ar_invoices", id: "inv-1" });
+    expect(found).toHaveLength(1);
+    expect(found[0].id).toBe(target.id);
+  });
 });
 
 describe("contacts repository", () => {
