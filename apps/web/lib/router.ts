@@ -22,7 +22,8 @@ export async function matchAndRun(rawPayload: unknown): Promise<{ runId: string;
 
   if (contact) {
     const followUpsRepo = createFollowUpsRepo(db);
-    await followUpsRepo.cancelScheduledForContact(ctx, contact.id, "cancel_on_reply");
+    const optedOut = SKILLS.filter((s) => s.followups?.cancelOnReply === false).map((s) => s.manifest.id);
+    await followUpsRepo.cancelScheduledForContact(ctx, contact.id, "cancel_on_reply", optedOut);
   }
 
   const skill = SKILLS.find((s) => s.trigger.kind === "message" && s.trigger.matches(inbound));

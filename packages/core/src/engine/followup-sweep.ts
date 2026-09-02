@@ -59,7 +59,10 @@ export async function sweepFollowUps(): Promise<{ drafted: number }> {
         providerMessageId: `${message.providerMessageId}-followup-${row.touchIndex}`,
         raw: message.raw,
       };
-      await runSkillForMessage(ctx, skill, inbound, message.id);
+      await runSkillForMessage(
+        ctx, skill, inbound, message.id,
+        (originRun.entityRef as { table: string; id: string } | null) ?? null,
+      );
       drafted += 1;
     } catch (err) {
       // Dead-letter after MAX_FOLLOWUP_ATTEMPTS consecutive failures instead

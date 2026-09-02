@@ -19,6 +19,7 @@ export type Skill<Intent = unknown, Draft = unknown> = {
   draft: (intent: Intent, message: InboundMessage) => Promise<Draft>;
   execute: (approvedDraft: Draft, channel: Pick<ChannelAdapter, "send">, opts: { idempotencyKey: string }) => Promise<ProviderResult>;
   intentSchema: z.ZodType<Intent>;
+  followups?: { offsets: number[]; cancelOnReply?: boolean };
   // Spec § 4.2: re-validated against on every edit before it's allowed to execute.
   draftSchema: z.ZodType<Draft>;
   editableFields: readonly string[];

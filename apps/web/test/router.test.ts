@@ -1,24 +1,35 @@
 import { describe, it, expect, beforeAll, afterEach, afterAll } from "vitest";
 import { eq } from "drizzle-orm";
-import { db, organization, messages, runs, actions, contacts, followUps, createFollowUpsRepo } from "@agentos/core";
+import { db, organization, messages, runs, actions, contacts, followUps, auditLog, createFollowUpsRepo } from "@agentos/core";
 import { matchAndRun } from "../lib/router";
 
 describe("matchAndRun", () => {
+  let orgId: string;
+
   beforeAll(async () => {
-    await db.insert(organization)
-      .values({ id: crypto.randomUUID(), name: "Router Test Org", slug: "router-test-org", createdAt: new Date() });
+    const [org] = await db.insert(organization)
+      .values({ id: crypto.randomUUID(), name: "Router Test Org", slug: "router-test-org", createdAt: new Date() })
+      .returning();
+    orgId = org.id;
   });
 
   afterEach(async () => {
-    await db.delete(followUps);
-    await db.delete(actions);
-    await db.delete(runs);
-    await db.delete(messages);
-    await db.delete(contacts);
+    await db.delete(auditLog).where(eq(auditLog.orgId, orgId));
+    await db.delete(followUps).where(eq(followUps.orgId, orgId));
+    await db.delete(actions).where(eq(actions.orgId, orgId));
+    await db.delete(runs).where(eq(runs.orgId, orgId));
+    await db.delete(messages).where(eq(messages.orgId, orgId));
+    await db.delete(contacts).where(eq(contacts.orgId, orgId));
   });
 
   afterAll(async () => {
-    await db.delete(organization);
+    await db.delete(auditLog).where(eq(auditLog.orgId, orgId));
+    await db.delete(followUps).where(eq(followUps.orgId, orgId));
+    await db.delete(actions).where(eq(actions.orgId, orgId));
+    await db.delete(runs).where(eq(runs.orgId, orgId));
+    await db.delete(messages).where(eq(messages.orgId, orgId));
+    await db.delete(contacts).where(eq(contacts.orgId, orgId));
+    await db.delete(organization).where(eq(organization.id, orgId));
   });
 
   it("matches the echo skill, creates a suspended run, and a pending action with the draft", async () => {
@@ -42,7 +53,7 @@ describe("matchAndRun", () => {
 
   it("cancels a contact's scheduled follow-ups when they reply", async () => {
     const [contact] = await db.insert(contacts).values({
-      id: crypto.randomUUID(), orgId: (await db.select().from(organization))[0].id,
+      id: crypto.randomUUID(), orgId,
       name: "Repeat Customer", emails: ["repeat@example.com"],
     }).returning();
 

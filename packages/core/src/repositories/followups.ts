@@ -2,6 +2,7 @@ import { and, eq, lte } from "drizzle-orm";
 import type { db as Db } from "../db/client";
 import { followUps, actions, runs, messages } from "../db/schema";
 import type { OrgContext } from "../context";
+import { createAuditRepo } from "./audit";
 
 // adversarial-plan-review round 1, finding 8: a disclosed policy choice, not
 // a measured figure — large enough that a normal tick clears its backlog in
@@ -41,8 +42,8 @@ export function createFollowUpsRepo(db: typeof Db) {
     // Spec § 4.4: an inbound message matched to the same contact cancels that
     // contact's scheduled follow-ups. Joins through actions -> runs ->
     // messages to find which scheduled follow-ups trace back to this contact.
-    async cancelScheduledForContact(ctx: OrgContext, contactId: string, reason: string) {
-      const rows = await db.select({ id: followUps.id })
+    async cancelScheduledForContact(ctx: OrgContext, contactId: string, reason: string, excludeSkillIds: string[] = []) {
+      const rows = await db.select({ id: followUps.id, skillId: followUps.skillId })
         .from(followUps)
         .innerJoin(actions, eq(actions.id, followUps.actionId))
         .innerJoin(runs, eq(runs.id, actions.runId))
@@ -50,10 +51,25 @@ export function createFollowUpsRepo(db: typeof Db) {
         .where(and(
           eq(followUps.orgId, ctx.orgId), eq(followUps.status, "scheduled"), eq(messages.contactId, contactId),
         ));
-      for (const row of rows) {
+      const toCancel = rows.filter((row) => !excludeSkillIds.includes(row.skillId));
+      for (const row of toCancel) {
         await db.update(followUps).set({ status: "cancelled" }).where(eq(followUps.id, row.id));
       }
-      return { cancelled: rows.length, reason };
+      // finding 10 (adversarial review round 1): `reason` was computed and
+      // returned but never persisted anywhere — one audit entry per
+      // cancellation batch (not per row) matches this file's existing
+      // granularity (action.executed, action.denied). Cross-tenant
+      // cancellation scope (contact-wide, not invoice-scoped) is a
+      // pre-existing Plan 3 design choice, disclosed in this plan's
+      // Least-confident decisions, not changed here.
+      if (toCancel.length > 0) {
+        const auditRepo = createAuditRepo(db);
+        await auditRepo.record(ctx, {
+          actor: ctx.userId, event: "followups.cancelled", entity: "contact", entityId: contactId,
+          payload: { reason, cancelledCount: toCancel.length, excludeSkillIds },
+        });
+      }
+      return { cancelled: toCancel.length, reason };
     },
   };
 }

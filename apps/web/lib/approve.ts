@@ -1,4 +1,5 @@
-import { db, createActionsRepo, createAuditRepo, createRunsRepo, can, type OrgContext } from "@agentos/core";
+import { db, createActionsRepo, createAuditRepo, createRunsRepo, can, scheduleFollowUpsForAction, type OrgContext } from "@agentos/core";
+import { SKILLS } from "@agentos/skills";
 import { getMastra } from "./mastra";
 import { extractFailedStep } from "./trace-extract";
 
@@ -52,6 +53,10 @@ async function resumeAndFinish(
     actor: ctx.userId, event: "action.executed", entity: "action", entityId: actionId,
     payload: { mastraRunId, result: result.status, trigger },
   });
+  if (runFinalStatus === "done") {
+    const skill = SKILLS.find((s) => s.manifest.id === skillId);
+    if (skill) await scheduleFollowUpsForAction(ctx, skill, actionId);
+  }
 
   return runFinalStatus;
 }
