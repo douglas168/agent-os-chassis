@@ -1,7 +1,8 @@
 import { and, eq, lt } from "drizzle-orm";
 import { db } from "../db/client";
-import { actions } from "../db/schema";
+import { actions, runs } from "../db/schema";
 import { createAuditRepo } from "../repositories/audit";
+import { declineSkillEntity } from "./decline-entity";
 
 export async function sweepExpiredActions(): Promise<{ expired: number }> {
   const now = new Date();
@@ -22,6 +23,14 @@ export async function sweepExpiredActions(): Promise<{ expired: number }> {
       });
     } catch (err) {
       console.error(`[expiry-sweep] audit write failed for action ${row.id} (already expired):`, err);
+    }
+
+    try {
+      const [run] = await db.select().from(runs)
+        .where(and(eq(runs.id, row.runId), eq(runs.orgId, row.orgId)));
+      await declineSkillEntity({ orgId: row.orgId }, run);
+    } catch (err) {
+      console.error(`[expiry-sweep] decline-entity write failed for action ${row.id} (already expired):`, err);
     }
   }
 

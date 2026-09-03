@@ -4,7 +4,7 @@ export const entity: EntityView = {
   table: "skill_ar_invoices",
   stages: [
     { key: "issued", label: "Issued" }, { key: "due", label: "Due" }, { key: "reminded", label: "Reminded" },
-    { key: "escalated", label: "Escalated" }, { key: "paid", label: "Paid" },
+    { key: "escalated", label: "Escalated" }, { key: "paid", label: "Paid" }, { key: "declined", label: "Declined" },
   ],
   present: (row) => ({
     title: `Invoice ${row.invoiceNumber as string}`,

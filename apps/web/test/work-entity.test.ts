@@ -54,7 +54,7 @@ describe("GET /api/work/[entityId]", () => {
     expect(json.title).toBe("Invoice INV-WE-1");
     expect(json.subtitle).toBe("Work Entity Customer");
     expect(json.currentStage).toBe("reminded");
-    expect(json.stages.map((s: any) => s.key)).toEqual(["issued", "due", "reminded", "escalated", "paid"]);
+    expect(json.stages.map((s: any) => s.key)).toEqual(["issued", "due", "reminded", "escalated", "paid", "declined"]);
     expect(json.runs).toHaveLength(1);
     expect(json.runs[0].skillId).toBe("ar-reminder");
   });

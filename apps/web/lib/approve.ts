@@ -1,4 +1,4 @@
-import { db, createActionsRepo, createAuditRepo, createRunsRepo, can, scheduleFollowUpsForAction, type OrgContext } from "@agentos/core";
+import { db, createActionsRepo, createAuditRepo, createRunsRepo, can, scheduleFollowUpsForAction, declineSkillEntity, type OrgContext } from "@agentos/core";
 import { SKILLS } from "@agentos/skills";
 import { getMastra } from "./mastra";
 import { extractFailedStep } from "./trace-extract";
@@ -101,6 +101,7 @@ export async function decideAction(ctx: OrgContext, actionId: string, decision: 
       actor: ctx.userId, event: "action.denied", entity: "action", entityId: actionId,
       payload: { mastraRunId: run.mastraRunId },
     });
+    await declineSkillEntity(ctx, run);
     return { status: "denied", actionId };
   }
 

@@ -15,4 +15,5 @@ export * from "./engine/followup-sweep";
 export * from "./engine/followup-schedule";
 export * from "./engine/cron-sweep";
 export * from "./engine/entity-view";
+export * from "./engine/decline-entity";
 export * from "./storage";

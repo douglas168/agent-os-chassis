@@ -18,7 +18,12 @@ export const skillArInvoices = pgTable("skill_ar_invoices", {
   // issued -> due -> reminded -> escalated -> paid (spec § 8.1's stage
   // stepper). Only issued -> reminded has driving logic in this plan
   // (Task 6's cron sweep) — due/escalated/paid are declared for the
-  // stepper's visual completeness, not wired transitions.
+  // stepper's visual completeness, not wired transitions. "declined" is a
+  // terminal value added outside spec § 8.1's stepper (final review N1,
+  // Gate B Option B, 2026-09-02) — set by a denied or expired reminder
+  // action (packages/core/src/engine/decline-entity.ts) so the invoice
+  // stops being redrafted on every cron tick. No unstick path exists yet;
+  // an operator must manually issue a new invoice or edit the row.
   stage: text("stage").notNull().default("issued"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
