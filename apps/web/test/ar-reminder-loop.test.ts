@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeAll, afterEach, afterAll, vi } from "vitest";
 import { and, eq } from "drizzle-orm";
 import { PgUpdateBuilder } from "drizzle-orm/pg-core";
-import { db, organization, contacts, messages, runs, actions, auditLog, followUps, sweepArReminderCron } from "@agentos/core";
+import { db, organization, contacts, messages, runs, actions, auditLog, followUps, sweepArReminderCron, sweepExpiredActions } from "@agentos/core";
 // finding 14 (adversarial review round 1): `skillArInvoices` is a
 // @agentos/skills export, not re-exported through @agentos/core (Task 5's
 // no-re-export rule) — importing it from the wrong package is a type error,
@@ -112,6 +112,46 @@ describe("ar-reminder — full loop (spec § 10)", () => {
     expect(second.triggered).toBe(0);
     const runsAfterSecond = await db.select().from(runs).where(eq(runs.orgId, orgId));
     expect(runsAfterSecond).toHaveLength(runsAfterFirst.length);
+  });
+
+  it("N1 (final review, sustained by judge): denying a reminder action declines the invoice — the cron sweep does not re-trigger it", async () => {
+    await db.update(skillArInvoices).set({ stage: "issued", updatedAt: new Date() })
+      .where(and(eq(skillArInvoices.id, invoiceId), eq(skillArInvoices.orgId, orgId)));
+
+    const swept = await sweepArReminderCron();
+    expect(swept.triggered).toBe(1);
+
+    const [action] = await db.select().from(actions).where(eq(actions.orgId, orgId));
+    const ctx = { orgId, userId: "operator@example.com", role: "owner" };
+    const result = await decideAction(ctx, action.id, "denied");
+    expect(result.status).toBe("denied");
+
+    const [invoiceAfterDeny] = await db.select().from(skillArInvoices).where(eq(skillArInvoices.id, invoiceId));
+    expect(invoiceAfterDeny.stage).toBe("declined");
+
+    const secondSweep = await sweepArReminderCron();
+    expect(secondSweep.triggered).toBe(0);
+  });
+
+  it("N1 (final review, sustained by judge): an ignored reminder action expires and declines the invoice — no infinite retry loop", async () => {
+    await db.update(skillArInvoices).set({ stage: "issued", updatedAt: new Date() })
+      .where(and(eq(skillArInvoices.id, invoiceId), eq(skillArInvoices.orgId, orgId)));
+
+    const swept = await sweepArReminderCron();
+    expect(swept.triggered).toBe(1);
+
+    const [action] = await db.select().from(actions).where(eq(actions.orgId, orgId));
+    await db.update(actions).set({ expiresAt: new Date(Date.now() - 1000) })
+      .where(eq(actions.id, action.id));
+
+    const result = await sweepExpiredActions();
+    expect(result.expired).toBeGreaterThanOrEqual(1);
+
+    const [invoiceAfterExpiry] = await db.select().from(skillArInvoices).where(eq(skillArInvoices.id, invoiceId));
+    expect(invoiceAfterExpiry.stage).toBe("declined");
+
+    const secondSweep = await sweepArReminderCron();
+    expect(secondSweep.triggered).toBe(0);
   });
 
   it("finding 13 (adversarial review round 1): the skill test harness (Task 4) also drives ar-reminder, not just echo", async () => {
