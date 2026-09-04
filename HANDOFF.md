@@ -30,9 +30,8 @@ None this session — all rejections belong to the prior build session and are r
 
 ## What's next / pending items
 
-- Write Plan 5 (remaining 11 UI screens) via `superpowers:writing-plans`, scoped to `plans/2026-08-27-agentos-template-plan-index.md` row 5 — the plan-index's own rule says the next plan is written once its predecessor's Gate B passes, which it now has.
-- `~/.claude` (the harness config repo, `90-DK-claude-harness`) carries 6 modified + several untracked files uncommitted. Tail mode skipped the ask this session (per the standing rule) — this is the first session flagging it; report only, no count of prior sessions to compare against.
-- No git remote on `agent-os-chassis` — deferred to Plan 6's `factory-onboarding` stage 1, not needed before then.
+- **Superseded 2026-09-04, see the parent workspace's own `HANDOFF.md`** (`30-AgentOS-github/HANDOFF.md`) for the current state — Plan 5 was written (split into 5a/5b), adversarially reviewed (15 findings, 14 accepted + 1 judge-sustained), and Gate A is now presented and awaiting "proceed." All bookkeeping for that work lives in the parent workspace, not here — this repo (`agent-os-chassis`) had zero code changes on 2026-09-04.
+- No git remote on `agent-os-chassis` — deferred to Plan 7's `factory-onboarding` stage 1 (Plan 6 renumbered to 7 in the 2026-09-04 plan-index split), not needed before then.
 
 ## Key files touched
 
@@ -43,6 +42,4 @@ None this session — all rejections belong to the prior build session and are r
 
 ## Suggested skills
 
-- `superpowers:writing-plans` — author Plan 5 now that Plan 4's Gate B has passed.
-- `gate-taxonomy` — run before presenting Plan 5 for approval, per the build spine.
-- `adversarial-plan-review` — critique Plan 5 before build, matching Plan 4's own process (which caught 15 findings pre-build).
+- See the parent workspace's `HANDOFF.md` (`30-AgentOS-github/HANDOFF.md`) — Gate A is standing on Plan 5a; next session likely opens with "proceed" to start `codex-implementer`.
