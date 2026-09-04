@@ -1,0 +1,46 @@
+{
+  "common": {
+    "toggleTheme": "Toggle theme",
+    "language": "Language",
+    "search": "Search…",
+    "globalSearch": "Global search",
+    "searchComingLater": "Search — coming in a later plan"
+  },
+  "nav": {
+    "chat": "Chat",
+    "dashboard": "Dashboard",
+    "approvals": "Approvals",
+    "work": "Work",
+    "jobs": "Jobs",
+    "inbox": "Inbox",
+    "brain": "Brain",
+    "traces": "Traces",
+    "skills": "Skills",
+    "adminUsers": "Users",
+    "adminOrg": "Organization",
+    "adminLlm": "LLM Provider",
+    "group": {
+      "work": "Work",
+      "intelligence": "Intelligence",
+      "build": "Build",
+      "manage": "Manage"
+    }
+  },
+  "approvals": {
+    "title": "Approvals",
+    "approve": "Approve",
+    "deny": "Deny",
+    "error": "Something went wrong"
+  },
+  "traces": {
+    "title": "Traces",
+    "failedAt": "failed at {step}",
+    "error": "Something went wrong"
+  },
+  "workEntity": {
+    "notFound": "Not found",
+    "error": "Error",
+    "loading": "Loading…",
+    "runs": "Runs"
+  }
+}

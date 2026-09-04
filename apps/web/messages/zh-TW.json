@@ -1,0 +1,46 @@
+{
+  "common": {
+    "toggleTheme": "切換主題",
+    "language": "語言",
+    "search": "搜尋…",
+    "globalSearch": "全域搜尋",
+    "searchComingLater": "搜尋功能將於後續計畫推出"
+  },
+  "nav": {
+    "chat": "對話",
+    "dashboard": "儀表板",
+    "approvals": "待審核",
+    "work": "工作",
+    "jobs": "排程",
+    "inbox": "收件匣",
+    "brain": "知識庫",
+    "traces": "追蹤紀錄",
+    "skills": "技能",
+    "adminUsers": "使用者",
+    "adminOrg": "組織設定",
+    "adminLlm": "LLM 供應商",
+    "group": {
+      "work": "工作",
+      "intelligence": "智能",
+      "build": "建置",
+      "manage": "管理"
+    }
+  },
+  "approvals": {
+    "title": "待審核",
+    "approve": "核准",
+    "deny": "拒絕",
+    "error": "發生錯誤"
+  },
+  "traces": {
+    "title": "追蹤紀錄",
+    "failedAt": "於 {step} 失敗",
+    "error": "發生錯誤"
+  },
+  "workEntity": {
+    "notFound": "找不到資料",
+    "error": "發生錯誤",
+    "loading": "載入中…",
+    "runs": "執行紀錄"
+  }
+}
