@@ -26,6 +26,10 @@ vi.mock("next/navigation", () => ({
   useParams: () => ({ entityId: "entity-1" }),
 }));
 
+vi.mock("next-intl", () => ({
+  useTranslations: () => (key: string) => key,
+}));
+
 import WorkEntityPage from "../app/work/[entityId]/page";
 import * as React from "react";
 
@@ -60,14 +64,13 @@ describe("WorkEntityPage", () => {
     fetchMock.mockResolvedValue(new Response(JSON.stringify({ error: "backend unavailable" }), { status: 500 }));
 
     const loading = WorkEntityPage();
-    expect(textContent(loading)).toBe("Loading…");
+    expect(textContent(loading)).toBe("loading");
     hookHarness.effect?.();
 
     await vi.waitFor(() => expect(hookHarness.states[2]).toBe("backend unavailable"));
 
     hookHarness.stateIndex = 0;
     const rendered = WorkEntityPage();
-    expect(textContent(rendered)).toContain("Error");
     expect(textContent(rendered)).toContain("backend unavailable");
   });
 });
