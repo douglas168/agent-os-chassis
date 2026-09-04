@@ -1,5 +1,5 @@
-import { describe, expect, it, vi } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { afterEach, describe, expect, it, vi } from "vitest";
+import { cleanup, render, screen } from "@testing-library/react";
 import { NextIntlClientProvider } from "next-intl";
 import TracesPage from "@/app/traces/page";
 import messages from "@/messages/zh-TW.json";
@@ -16,6 +16,8 @@ function renderPage() {
     </NextIntlClientProvider>,
   );
 }
+
+afterEach(() => cleanup());
 
 describe("TracesPage", () => {
   it("renders the zh-TW title, a failed trace, its error, and its failed input", async () => {

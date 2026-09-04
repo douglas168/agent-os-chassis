@@ -54,11 +54,19 @@ function contrastRatio(hexA: string, hexB: string) {
   return (l1 + 0.05) / (l2 + 0.05);
 }
 
-function extractRootVar(name: string): string {
-  const rootBlock = css.match(/:root\s*\{([^}]*)\}/)?.[1] ?? "";
-  const match = rootBlock.match(new RegExp(`--${name}:\\s*(#[0-9a-fA-F]{6})`));
-  if (!match) throw new Error(`--${name} not found in :root block`);
+function extractVar(selector: string, name: string): string {
+  const block = css.match(new RegExp(`${selector}\\s*\\{([^}]*)\\}`))?.[1] ?? "";
+  const match = block.match(new RegExp(`--${name}:\\s*(#[0-9a-fA-F]{6})`));
+  if (!match) throw new Error(`--${name} not found in ${selector} block`);
   return match[1];
+}
+
+function extractRootVar(name: string): string {
+  return extractVar(":root", name);
+}
+
+function extractDarkVar(name: string): string {
+  return extractVar("\\.dark", name);
 }
 
 describe("WCAG AA contrast (4.5:1 minimum, normal text)", () => {
@@ -75,5 +83,28 @@ describe("WCAG AA contrast (4.5:1 minimum, normal text)", () => {
 
   it("light-mode --muted-foreground meets 4.5:1 against --muted", () => {
     expect(contrastRatio(extractRootVar("muted-foreground"), extractRootVar("muted"))).toBeGreaterThanOrEqual(4.5);
+  });
+
+  it("light-mode --primary meets 4.5:1 against --primary-foreground", () => {
+    expect(contrastRatio(extractRootVar("primary"), extractRootVar("primary-foreground"))).toBeGreaterThanOrEqual(4.5);
+  });
+
+  it("dark-mode solid status backgrounds meet 4.5:1 against --pill-foreground", () => {
+    const pillFg = extractDarkVar("pill-foreground");
+    for (const status of ["danger", "warning", "success"]) {
+      expect(contrastRatio(extractDarkVar(status), pillFg)).toBeGreaterThanOrEqual(4.5);
+    }
+  });
+
+  it("dark-mode --foreground meets 4.5:1 against --background", () => {
+    expect(contrastRatio(extractDarkVar("foreground"), extractDarkVar("background"))).toBeGreaterThanOrEqual(4.5);
+  });
+
+  it("dark-mode --muted-foreground meets 4.5:1 against --muted", () => {
+    expect(contrastRatio(extractDarkVar("muted-foreground"), extractDarkVar("muted"))).toBeGreaterThanOrEqual(4.5);
+  });
+
+  it("dark-mode --primary meets 4.5:1 against --primary-foreground", () => {
+    expect(contrastRatio(extractDarkVar("primary"), extractDarkVar("primary-foreground"))).toBeGreaterThanOrEqual(4.5);
   });
 });

@@ -25,7 +25,7 @@ export default function TracesPage() {
   return (
     <div className="space-y-4">
       <h1 className="text-lg font-semibold text-foreground">{t("title")}</h1>
-      {loadError && <p className="text-sm text-danger">{loadError}</p>}
+      {loadError && <p className="inline-block rounded-md bg-danger px-3 py-1.5 text-sm text-pill-foreground">{loadError}</p>}
       <ul className="space-y-3">
         {traces.map((tr) => (
           <li key={tr.id} className="rounded-lg border border-border bg-card p-4 shadow-card">

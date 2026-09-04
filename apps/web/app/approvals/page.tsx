@@ -13,6 +13,10 @@ export default function ApprovalsPage() {
 
   async function refresh() {
     const res = await fetch("/api/actions");
+    if (!res.ok) {
+      setError(t("error"));
+      return;
+    }
     setActions(await res.json());
   }
 
@@ -43,7 +47,7 @@ export default function ApprovalsPage() {
   return (
     <div className="space-y-4">
       <h1 className="text-lg font-semibold text-foreground">{t("title")}</h1>
-      {error && <p className="text-sm text-danger">{error}</p>}
+      {error && <p className="inline-block rounded-md bg-danger px-3 py-1.5 text-sm text-pill-foreground">{error}</p>}
       <ul className="space-y-3">
         {actions.map((a) => (
           <li key={a.id} className="rounded-lg border border-border bg-card p-4 shadow-card">

@@ -1,5 +1,5 @@
-import { describe, expect, it, vi } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { afterEach, describe, expect, it, vi } from "vitest";
+import { cleanup, render, screen } from "@testing-library/react";
 import { NextIntlClientProvider } from "next-intl";
 
 vi.mock("next/navigation", () => ({
@@ -8,6 +8,8 @@ vi.mock("next/navigation", () => ({
 
 import { LocaleSwitcher } from "@/components/shell/locale-switcher";
 import en from "@/messages/en.json";
+
+afterEach(() => cleanup());
 
 describe("LocaleSwitcher", () => {
   it("renders both supported locale options", () => {

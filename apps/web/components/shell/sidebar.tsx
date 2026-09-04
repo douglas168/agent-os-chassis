@@ -31,7 +31,7 @@ export function Sidebar() {
                   aria-current={active ? "page" : undefined}
                   className={cn(
                     "flex items-center gap-2 rounded-md px-3 py-2 text-sm text-foreground hover:bg-accent",
-                    active && "bg-primary/10 font-medium text-primary",
+                    active && "bg-primary font-medium text-primary-foreground",
                   )}
                 >
                   <Icon className="h-4 w-4" />

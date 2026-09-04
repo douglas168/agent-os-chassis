@@ -1,5 +1,5 @@
-import { describe, expect, it, vi } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { afterEach, describe, expect, it, vi } from "vitest";
+import { cleanup, render, screen } from "@testing-library/react";
 import { NextIntlClientProvider } from "next-intl";
 import { ThemeProvider } from "@/components/theme-provider";
 import { Topbar } from "@/components/shell/topbar";
@@ -8,6 +8,8 @@ import en from "@/messages/en.json";
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ refresh: vi.fn() }),
 }));
+
+afterEach(() => cleanup());
 
 describe("Topbar", () => {
   it("renders global search, locale switcher, and theme toggle", () => {
