@@ -1,6 +1,8 @@
 "use client";
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
+import { useTranslations } from "next-intl";
+import { cn } from "@/lib/cn";
 
 type EntityViewData = {
   id: string; skillId: string; title: string; subtitle?: string;
@@ -16,6 +18,7 @@ type EntityViewData = {
 
 export default function WorkEntityPage() {
   const params = useParams<{ entityId: string }>();
+  const t = useTranslations("workEntity");
   const [view, setView] = useState<EntityViewData | null>(null);
   const [notFound, setNotFound] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -27,7 +30,7 @@ export default function WorkEntityPage() {
         const body: unknown = await res.json().catch(() => null);
         const message = body && typeof body === "object" && "error" in body && typeof body.error === "string"
           ? body.error
-          : "Unable to load entity";
+          : t("error");
         setError(message);
         return;
       }
@@ -35,26 +38,52 @@ export default function WorkEntityPage() {
     });
   }, [params.entityId]);
 
-  if (notFound) return <main><h1>Not found</h1></main>;
-  if (error) return <main><h1>Error</h1><p>{error}</p></main>;
-  if (!view) return <main><p>Loading…</p></main>;
+  if (notFound) return <p className="text-sm text-foreground">{t("notFound")}</p>;
+  if (error) {
+    return (
+      <p className="inline-block rounded-md bg-danger px-3 py-1.5 text-sm text-pill-foreground">{error}</p>
+    );
+  }
+  if (!view) return <p className="text-sm text-muted-foreground">{t("loading")}</p>;
 
   return (
-    <main>
-      <h1>{view.title}</h1>
-      {view.subtitle && <p>{view.subtitle}</p>}
-      <ol>
-        {view.stages.map((s) => (
-          <li key={s.key}>{s.key === view.currentStage ? <strong>{s.label}</strong> : s.label}</li>
-        ))}
-      </ol>
-      <ul>
-        {view.fields.map((f) => (<li key={f.label}>{f.label}: {f.value}</li>))}
-      </ul>
-      <h2>Runs</h2>
-      <ul>
-        {view.runs.map((r) => (<li key={r.id}>{r.status} — {r.createdAt}</li>))}
-      </ul>
-    </main>
+    <div className="grid gap-6 xl:grid-cols-2">
+      <div className="space-y-4 rounded-lg border border-border bg-card p-4 shadow-card">
+        <div>
+          <h1 className="text-lg font-semibold text-foreground">{view.title}</h1>
+          {view.subtitle && <p className="text-sm text-muted-foreground">{view.subtitle}</p>}
+        </div>
+        <ol className="flex flex-wrap gap-2">
+          {view.stages.map((s) => (
+            <li
+              key={s.key}
+              className={cn(
+                "rounded-full px-3 py-1 text-xs",
+                s.key === view.currentStage
+                  ? "bg-primary font-medium text-primary-foreground"
+                  : "bg-muted text-muted-foreground",
+              )}
+            >
+              {s.label}
+            </li>
+          ))}
+        </ol>
+        <ul className="space-y-1 text-sm text-foreground">
+          {view.fields.map((f) => (
+            <li key={f.label}><span className="text-muted-foreground">{f.label}:</span> {f.value}</li>
+          ))}
+        </ul>
+      </div>
+      <div className="space-y-3">
+        <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">{t("runs")}</h2>
+        <ul className="space-y-2">
+          {view.runs.map((r) => (
+            <li key={r.id} className="rounded-lg border border-border bg-card p-3 text-sm shadow-card">
+              {r.status} — {r.createdAt}
+            </li>
+          ))}
+        </ul>
+      </div>
+    </div>
   );
 }
