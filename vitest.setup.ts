@@ -1,12 +1,6 @@
 import "@testing-library/jest-dom/vitest";
 import { config } from "dotenv";
 import { resolve } from "node:path";
-import { vi } from "vitest";
-
-// Component tests render outside Next's App Router context.
-vi.mock("next/navigation", () => ({
-  useRouter: () => ({ refresh: vi.fn() }),
-}));
 
 config({ path: resolve(import.meta.dirname, ".env.local") });
 
