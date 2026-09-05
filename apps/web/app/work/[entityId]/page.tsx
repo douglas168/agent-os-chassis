@@ -77,11 +77,15 @@ export default function WorkEntityPage() {
       <div className="space-y-3">
         <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">{t("runs")}</h2>
         <ul className="space-y-2">
-          {view.runs.map((r) => (
-            <li key={r.id} className="rounded-lg border border-border bg-card p-3 text-sm shadow-card">
-              {r.status} — {r.createdAt}
-            </li>
-          ))}
+          {view.runs.length === 0 ? (
+            <li className="text-sm text-muted-foreground">{t("runsEmpty")}</li>
+          ) : (
+            view.runs.map((r) => (
+              <li key={r.id} className="rounded-lg border border-border bg-card p-3 text-sm shadow-card">
+                {r.status} — {r.createdAt}
+              </li>
+            ))
+          )}
         </ul>
       </div>
     </div>

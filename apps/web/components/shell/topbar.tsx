@@ -18,7 +18,7 @@ export function Topbar() {
           aria-label={t("globalSearch")}
           disabled
           title={t("searchComingLater")}
-          className="w-64 bg-transparent text-sm text-foreground placeholder:text-muted-foreground disabled:cursor-not-allowed"
+          className="w-64 bg-transparent text-sm text-foreground placeholder:text-muted-foreground disabled:cursor-not-allowed disabled:opacity-50"
         />
       </div>
       <div className="flex items-center gap-3">

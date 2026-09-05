@@ -19,12 +19,12 @@ const pendingAction = {
 
 type PatchResponse = { ok: boolean; status?: number; json: () => Promise<unknown> };
 
-function mockFetch(patchResponse: PatchResponse | Promise<PatchResponse>) {
+function mockFetch(patchResponse: PatchResponse | Promise<PatchResponse>, actions = [pendingAction]) {
   vi.stubGlobal(
     "fetch",
     vi.fn((_url: string, init?: RequestInit) => {
       if (init?.method === "PATCH") return Promise.resolve(patchResponse);
-      return Promise.resolve({ ok: true, json: () => Promise.resolve([pendingAction]) });
+      return Promise.resolve({ ok: true, json: () => Promise.resolve(actions) });
     }),
   );
 }
@@ -42,6 +42,13 @@ describe("ApprovalsPage", () => {
     expect(await screen.findByText("待審核")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "核准" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "拒絕" })).toBeInTheDocument();
+  });
+
+  it("renders the translated empty state when there are no pending actions", async () => {
+    mockFetch({ ok: true, json: () => Promise.resolve({}) }, []);
+    renderPage();
+
+    expect(await screen.findByText("目前沒有待審核項目。")).toBeInTheDocument();
   });
 
   it("approves an action and PATCHes the right endpoint with the right body", async () => {

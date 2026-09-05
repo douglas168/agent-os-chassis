@@ -53,6 +53,29 @@ describe("WorkEntityPage", () => {
     expect(screen.getByText("執行紀錄")).toBeInTheDocument();
   });
 
+  it("renders the translated empty state when the entity has no runs", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({
+        ok: true,
+        status: 200,
+        json: () => Promise.resolve({
+          id: "inv1", skillId: "ar-reminder", title: "Invoice #42", subtitle: "Acme Co",
+          fields: [{ label: "Amount", value: "$400" }],
+          stages: [
+            { key: "issued", label: "Issued" },
+            { key: "due", label: "Due" },
+          ],
+          currentStage: "due",
+          runs: [],
+        }),
+      }),
+    );
+    renderPage();
+
+    expect(await screen.findByText("目前還沒有執行紀錄。")).toBeInTheDocument();
+  });
+
   it("renders the zh-TW loading state before the fetch resolves", () => {
     vi.stubGlobal("fetch", vi.fn(() => new Promise(() => {})));
     renderPage();

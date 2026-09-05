@@ -26,6 +26,7 @@ describe("Topbar", () => {
     // Visual-only in this plan (LCD #6) — disabled so it reads as inert,
     // not as a shipped, silently-broken control.
     expect(search).toBeDisabled();
+    expect(search).toHaveClass("disabled:opacity-50");
     expect(screen.getByRole("combobox", { name: /language/i })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /toggle theme/i })).toBeInTheDocument();
   });

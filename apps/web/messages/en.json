@@ -30,17 +30,20 @@
     "title": "Approvals",
     "approve": "Approve",
     "deny": "Deny",
+    "empty": "No approvals waiting right now.",
     "error": "Something went wrong"
   },
   "traces": {
     "title": "Traces",
     "failedAt": "failed at {step}",
+    "empty": "No traces yet.",
     "error": "Something went wrong"
   },
   "workEntity": {
     "notFound": "Not found",
     "error": "Error",
     "loading": "Loading…",
-    "runs": "Runs"
+    "runs": "Runs",
+    "runsEmpty": "No runs yet."
   }
 }

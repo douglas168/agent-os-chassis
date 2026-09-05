@@ -31,6 +31,13 @@ describe("TracesPage", () => {
     expect(screen.getByText(/"invoiceId": "inv1"/)).toBeInTheDocument();
   });
 
+  it("renders the translated empty state when there are no traces", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ ok: true, json: () => Promise.resolve([]) }));
+    renderPage();
+
+    expect(await screen.findByText("目前還沒有追蹤紀錄。")).toBeInTheDocument();
+  });
+
   it("shows a translated error message when the fetch fails", async () => {
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ ok: false, status: 500, json: () => Promise.resolve(null) }));
     renderPage();

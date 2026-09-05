@@ -49,29 +49,33 @@ export default function ApprovalsPage() {
       <h1 className="text-lg font-semibold text-foreground">{t("title")}</h1>
       {error && <p className="inline-block rounded-md bg-danger px-3 py-1.5 text-sm text-pill-foreground">{error}</p>}
       <ul className="space-y-3">
-        {actions.map((a) => (
-          <li key={a.id} className="rounded-lg border border-border bg-card p-4 shadow-card">
-            <p className="text-sm text-foreground">
-              <span className="font-medium">{a.skillId}</span>: {JSON.stringify(a.draft)}
-            </p>
-            <div className="mt-3 flex gap-2">
-              <button
-                onClick={() => decide(a.id, "approved")}
-                disabled={decidingId === a.id}
-                className="rounded-md bg-primary px-3 py-1.5 text-sm text-primary-foreground hover:opacity-90 disabled:opacity-50"
-              >
-                {t("approve")}
-              </button>
-              <button
-                onClick={() => decide(a.id, "denied")}
-                disabled={decidingId === a.id}
-                className={cn("rounded-md px-3 py-1.5 text-sm disabled:opacity-50", "bg-danger text-pill-foreground hover:opacity-90")}
-              >
-                {t("deny")}
-              </button>
-            </div>
-          </li>
-        ))}
+        {actions.length === 0 ? (
+          <li className="text-sm text-muted-foreground">{t("empty")}</li>
+        ) : (
+          actions.map((a) => (
+            <li key={a.id} className="rounded-lg border border-border bg-card p-4 shadow-card">
+              <p className="text-sm text-foreground">
+                <span className="font-medium">{a.skillId}</span>: {JSON.stringify(a.draft)}
+              </p>
+              <div className="mt-3 flex gap-2">
+                <button
+                  onClick={() => decide(a.id, "approved")}
+                  disabled={decidingId === a.id}
+                  className="rounded-md bg-primary px-3 py-1.5 text-sm text-primary-foreground hover:opacity-90 disabled:opacity-50"
+                >
+                  {t("approve")}
+                </button>
+                <button
+                  onClick={() => decide(a.id, "denied")}
+                  disabled={decidingId === a.id}
+                  className={cn("rounded-md px-3 py-1.5 text-sm disabled:opacity-50", "bg-danger text-pill-foreground hover:opacity-90")}
+                >
+                  {t("deny")}
+                </button>
+              </div>
+            </li>
+          ))
+        )}
       </ul>
     </div>
   );

@@ -30,17 +30,20 @@
     "title": "待審核",
     "approve": "核准",
     "deny": "拒絕",
+    "empty": "目前沒有待審核項目。",
     "error": "發生錯誤"
   },
   "traces": {
     "title": "追蹤紀錄",
     "failedAt": "於 {step} 失敗",
+    "empty": "目前還沒有追蹤紀錄。",
     "error": "發生錯誤"
   },
   "workEntity": {
     "notFound": "找不到資料",
     "error": "發生錯誤",
     "loading": "載入中…",
-    "runs": "執行紀錄"
+    "runs": "執行紀錄",
+    "runsEmpty": "目前還沒有執行紀錄。"
   }
 }
