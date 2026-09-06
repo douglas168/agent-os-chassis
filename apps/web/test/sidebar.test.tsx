@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { cleanup, render, screen } from "@testing-library/react";
+import { cleanup, render, screen, within } from "@testing-library/react";
 import { NextIntlClientProvider } from "next-intl";
 import type { AriaAttributes, ReactNode } from "react";
 import { Sidebar } from "@/components/shell/sidebar";
@@ -13,11 +13,12 @@ vi.mock("next/navigation", () => ({
 // next/link's App Router internals expect a live router context that a
 // bare RTL render doesn't provide — render it as a plain anchor instead.
 vi.mock("next/link", () => ({
-  default: ({ href, children, className, "aria-current": ariaCurrent }: {
+  default: ({ href, children, className, "aria-current": ariaCurrent, "aria-label": ariaLabel }: {
     href: string; children: ReactNode; className?: string;
     "aria-current"?: AriaAttributes["aria-current"];
+    "aria-label"?: AriaAttributes["aria-label"];
   }) => (
-    <a href={href} className={className} aria-current={ariaCurrent}>{children}</a>
+    <a href={href} className={className} aria-current={ariaCurrent} aria-label={ariaLabel}>{children}</a>
   ),
 }));
 
@@ -53,5 +54,37 @@ describe("Sidebar", () => {
 
     expect(screen.getByRole("link", { name: /Approvals/i })).toHaveAttribute("aria-current", "page");
     expect(screen.getByRole("link", { name: /LLM Provider/i })).not.toHaveAttribute("aria-current");
+  });
+
+  it("shows non-zero counters on approvals, jobs, and inbox links", () => {
+    render(
+      <NextIntlClientProvider locale="en" messages={en}>
+        <Sidebar counts={{ approvals: 3, jobs: 0, inbox: 5 }} />
+      </NextIntlClientProvider>,
+    );
+
+    const approvalsLink = screen.getByRole("link", { name: "Approvals" });
+    const jobsLink = screen.getByRole("link", { name: "Jobs" });
+    const inboxLink = screen.getByRole("link", { name: "Inbox" });
+    expect(within(approvalsLink).getByText("3")).toBeInTheDocument();
+    expect(within(jobsLink).queryByText("0")).not.toBeInTheDocument();
+    expect(within(inboxLink).getByText("5")).toBeInTheDocument();
+
+    expect(screen.getByRole("complementary")).toHaveClass("w-16", "xl:w-[245px]");
+  });
+
+  it("nav link labels are hidden below xl via a class, not a lost accessible name (finding 10)", () => {
+    render(
+      <NextIntlClientProvider locale="en" messages={en}>
+        <Sidebar counts={{ approvals: 3, jobs: 0, inbox: 5 }} />
+      </NextIntlClientProvider>,
+    );
+
+    const approvalsLink = screen.getByRole("link", { name: "Approvals" });
+    expect(approvalsLink).toHaveAttribute("aria-label", "Approvals");
+    expect(approvalsLink.querySelector("span.hidden.xl\\:inline")).toHaveTextContent("Approvals");
+
+    const pill = screen.getByText("3");
+    expect(pill.className).not.toMatch(/\bhidden\b/);
   });
 });

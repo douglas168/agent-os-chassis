@@ -34,6 +34,15 @@ export function createFollowUpsRepo(db: typeof Db) {
         .where(and(eq(followUps.status, "scheduled"), lte(followUps.dueAt, new Date())))
         .limit(FOLLOWUP_SWEEP_BATCH_SIZE);
     },
+    async countDueForOrg(ctx: OrgContext) {
+      const rows = await db.select({ id: followUps.id }).from(followUps)
+        .where(and(
+          eq(followUps.orgId, ctx.orgId),
+          eq(followUps.status, "scheduled"),
+          lte(followUps.dueAt, new Date()),
+        ));
+      return rows.length;
+    },
     async markStatus(ctx: OrgContext, id: string, status: string) {
       const [row] = await db.update(followUps).set({ status })
         .where(and(eq(followUps.orgId, ctx.orgId), eq(followUps.id, id))).returning();

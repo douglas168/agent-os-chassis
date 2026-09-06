@@ -16,6 +16,18 @@ vi.mock("next/link", () => ({
   ),
 }));
 
+vi.mock("@/components/shell/sidebar", () => ({
+  Sidebar: ({ counts }: { counts?: Record<string, number> }) => (
+    <aside data-testid="mock-sidebar" data-counts={counts ? JSON.stringify(counts) : undefined}>Sidebar</aside>
+  ),
+}));
+
+vi.mock("@/components/shell/topbar", () => ({
+  Topbar: ({ orgName }: { orgName?: string }) => (
+    <header data-testid="mock-topbar" data-org-name={orgName}>{orgName}</header>
+  ),
+}));
+
 afterEach(() => cleanup());
 
 describe("AppShell", () => {
@@ -38,5 +50,19 @@ describe("AppShell", () => {
     const shell = column?.parentElement;
     expect(shell).toHaveClass("h-screen");
     expect(shell).not.toHaveClass("min-h-screen");
+  });
+
+  it("passes orgName to Topbar and counts to Sidebar", () => {
+    const counts = { approvals: 1, jobs: 0, inbox: 0 };
+    render(
+      <NextIntlClientProvider locale="en" messages={en}>
+        <AppShell orgName="Acme Co" counts={counts}>
+          <div>Content</div>
+        </AppShell>
+      </NextIntlClientProvider>,
+    );
+
+    expect(screen.getByTestId("mock-sidebar")).toHaveAttribute("data-counts", JSON.stringify(counts));
+    expect(screen.getByTestId("mock-topbar")).toHaveAttribute("data-org-name", "Acme Co");
   });
 });

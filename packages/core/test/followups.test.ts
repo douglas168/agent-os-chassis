@@ -125,4 +125,43 @@ describe("follow-ups repository", () => {
 
     await db.delete(organization).where(eq(organization.id, otherOrg.id));
   });
+
+  it("countDueForOrg counts only this org's scheduled, past-due follow-ups", async () => {
+    const followUpsRepo = createFollowUpsRepo(db);
+    const [otherOrg] = await db.insert(organization)
+      .values({ id: crypto.randomUUID(), name: "Other Org Count", slug: "other-org-followups-count", createdAt: new Date() })
+      .returning();
+    const [otherRun] = await db.insert(runs)
+      .values({ id: crypto.randomUUID(), orgId: otherOrg.id, skillId: "echo", mastraRunId: "mr-fu-count-other", status: "done" })
+      .returning();
+    const [otherAction] = await db.insert(actions).values({
+      id: crypto.randomUUID(), orgId: otherOrg.id, runId: otherRun.id, skillId: "echo", kind: "reply",
+      draft: {}, idempotencyKey: `${otherRun.id}:draft`, expiresAt: new Date(Date.now() + 1000 * 60 * 60 * 72),
+    }).returning();
+
+    try {
+      await db.insert(followUps).values([
+        {
+          id: crypto.randomUUID(), orgId, actionId, skillId: "echo",
+          dueAt: new Date(Date.now() - 60_000), status: "scheduled", touchIndex: 3,
+        },
+        {
+          id: crypto.randomUUID(), orgId: otherOrg.id, actionId: otherAction.id, skillId: "echo",
+          dueAt: new Date(Date.now() - 60_000), status: "scheduled", touchIndex: 0,
+        },
+        {
+          id: crypto.randomUUID(), orgId, actionId, skillId: "echo",
+          dueAt: new Date(Date.now() - 60_000), status: "cancelled", touchIndex: 4,
+        },
+      ]);
+
+      const countA = await followUpsRepo.countDueForOrg({ orgId, userId: "system", role: "owner" });
+      expect(countA).toBe(1);
+    } finally {
+      await db.delete(followUps).where(eq(followUps.orgId, otherOrg.id));
+      await db.delete(actions).where(eq(actions.id, otherAction.id));
+      await db.delete(runs).where(eq(runs.id, otherRun.id));
+      await db.delete(organization).where(eq(organization.id, otherOrg.id));
+    }
+  });
 });

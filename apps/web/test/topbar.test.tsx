@@ -30,4 +30,32 @@ describe("Topbar", () => {
     expect(screen.getByRole("combobox", { name: /language/i })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /toggle theme/i })).toBeInTheDocument();
   });
+
+  it("shows the organization name as read-only text", () => {
+    render(
+      <NextIntlClientProvider locale="en" messages={en}>
+        <ThemeProvider>
+          <Topbar orgName="Acme Co" />
+        </ThemeProvider>
+      </NextIntlClientProvider>,
+    );
+
+    const orgName = screen.getByText("Acme Co");
+    expect(orgName).toBeInTheDocument();
+    expect(orgName.closest("button, select")).toBeNull();
+  });
+
+  it("search input's disabled-reason text is reachable via aria-describedby (finding 9)", () => {
+    render(
+      <NextIntlClientProvider locale="en" messages={en}>
+        <ThemeProvider>
+          <Topbar orgName="Acme Co" />
+        </ThemeProvider>
+      </NextIntlClientProvider>,
+    );
+
+    const search = screen.getByRole("searchbox", { name: /global search/i });
+    expect(search).toHaveAttribute("aria-describedby", "global-search-hint");
+    expect(document.getElementById("global-search-hint")).toHaveTextContent(en.common.searchComingLater);
+  });
 });

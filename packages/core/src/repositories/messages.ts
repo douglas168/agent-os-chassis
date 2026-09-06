@@ -1,4 +1,4 @@
-import { and, eq } from "drizzle-orm";
+import { and, eq, isNull } from "drizzle-orm";
 import type { db as Db } from "../db/client";
 import { messages } from "../db/schema";
 import type { OrgContext } from "../context";
@@ -11,6 +11,15 @@ export function createMessagesRepo(db: typeof Db) {
     },
     async listForOrg(ctx: OrgContext) {
       return db.select().from(messages).where(eq(messages.orgId, ctx.orgId));
+    },
+    async countUnmatched(ctx: OrgContext) {
+      const rows = await db.select({ id: messages.id }).from(messages)
+        .where(and(
+          eq(messages.orgId, ctx.orgId),
+          eq(messages.direction, "in"),
+          isNull(messages.contactId),
+        ));
+      return rows.length;
     },
   };
 }

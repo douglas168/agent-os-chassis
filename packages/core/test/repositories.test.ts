@@ -1,5 +1,5 @@
-import { describe, it, expect, beforeAll, afterAll } from "vitest";
-import { and, eq } from "drizzle-orm";
+import { describe, it, expect, beforeAll, afterEach, afterAll } from "vitest";
+import { and, eq, inArray } from "drizzle-orm";
 import { db } from "../src/db/client";
 import { organization, messages, runs, contacts } from "../src/db/schema";
 import { createMessagesRepo } from "../src/repositories/messages";
@@ -18,9 +18,17 @@ describe("org-scoped repositories", () => {
       .returning();
   });
 
+  afterEach(async () => {
+    const orgIds = [orgA.id, orgB.id];
+    await db.delete(runs).where(inArray(runs.orgId, orgIds));
+    await db.delete(messages).where(inArray(messages.orgId, orgIds));
+    await db.delete(contacts).where(inArray(contacts.orgId, orgIds));
+  });
+
   afterAll(async () => {
     await db.delete(runs);
     await db.delete(messages);
+    await db.delete(contacts);
     await db.delete(organization);
   });
 
@@ -75,6 +83,37 @@ describe("org-scoped repositories", () => {
     const found = await runsRepo.findForEntity({ orgId: orgA.id, userId: "system", role: "owner" }, { table: "skill_ar_invoices", id: "inv-1" });
     expect(found).toHaveLength(1);
     expect(found[0].id).toBe(target.id);
+  });
+
+  it("countUnmatched counts only this org's contact-less messages", async () => {
+    const messagesRepo = createMessagesRepo(db);
+    const ctxA = { orgId: orgA.id, userId: "system", role: "owner" };
+    const ctxB = { orgId: orgB.id, userId: "system", role: "owner" };
+    const [someContact] = await db.insert(contacts).values({
+      id: crypto.randomUUID(), orgId: orgA.id, name: "Matched Contact", emails: ["x@example.com"],
+    }).returning();
+
+    await messagesRepo.create(ctxA, {
+      channel: "mock", direction: "in", providerMessageId: "unmatched-1", from: "x@example.com", to: "y@example.com", body: "hi",
+    });
+    await messagesRepo.create(ctxA, {
+      channel: "mock", direction: "in", providerMessageId: "matched-1", from: "x@example.com", to: "y@example.com", body: "hi", contactId: someContact.id,
+    });
+    await messagesRepo.create(ctxB, {
+      channel: "mock", direction: "in", providerMessageId: "unmatched-other-org", from: "x@example.com", to: "y@example.com", body: "hi",
+    });
+
+    const count = await messagesRepo.countUnmatched(ctxA);
+    expect(count).toBe(1);
+  });
+
+  it("countUnmatched excludes outbound messages (adversarial review round 1, finding 15)", async () => {
+    const messagesRepo = createMessagesRepo(db);
+    await messagesRepo.create({ orgId: orgA.id, userId: "system", role: "owner" }, {
+      channel: "mock", direction: "out", providerMessageId: "outbound-1", from: "y@example.com", to: "x@example.com", body: "reply",
+    });
+    const count = await messagesRepo.countUnmatched({ orgId: orgA.id, userId: "system", role: "owner" });
+    expect(count).toBe(0);
   });
 });
 
