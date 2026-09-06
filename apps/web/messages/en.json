@@ -60,6 +60,15 @@
     "empty": "No traces yet.",
     "error": "Something went wrong"
   },
+  "inbox": {
+    "title": "Inbox",
+    "matched": "Matched",
+    "matchedEmpty": "No matched messages.",
+    "unmatched": "Unmatched",
+    "unmatchedEmpty": "No unmatched messages.",
+    "noSubject": "(no subject)",
+    "error": "Something went wrong"
+  },
   "jobs": {
     "title": "Jobs",
     "followUps": "Follow-ups",
