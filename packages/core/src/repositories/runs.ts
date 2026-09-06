@@ -25,6 +25,12 @@ export function createRunsRepo(db: typeof Db) {
     async listForOrg(ctx: OrgContext) {
       return db.select().from(runs).where(eq(runs.orgId, ctx.orgId)).orderBy(desc(runs.createdAt));
     },
+    async findLatestForSkill(ctx: OrgContext, skillId: string) {
+      const rows = await db.select().from(runs)
+        .where(and(eq(runs.orgId, ctx.orgId), eq(runs.skillId, skillId)))
+        .orderBy(desc(runs.createdAt)).limit(1);
+      return rows[0] ?? null;
+    },
     async findForEntity(ctx: OrgContext, entityRef: { table: string; id: string }) {
       return db.select().from(runs).where(
         and(eq(runs.orgId, ctx.orgId), sql`${runs.entityRef} @> ${JSON.stringify(entityRef)}::jsonb`),

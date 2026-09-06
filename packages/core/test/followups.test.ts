@@ -164,4 +164,43 @@ describe("follow-ups repository", () => {
       await db.delete(organization).where(eq(organization.id, otherOrg.id));
     }
   });
+
+  it("listForOrg returns all of this org's follow-ups regardless of status", async () => {
+    const followUpsRepo = createFollowUpsRepo(db);
+    const ctx = { orgId, userId: "system", role: "owner" };
+    const [otherOrg] = await db.insert(organization)
+      .values({ id: crypto.randomUUID(), name: "Other Org List", slug: "other-org-followups-list", createdAt: new Date() })
+      .returning();
+    const [otherRun] = await db.insert(runs).values({
+      id: crypto.randomUUID(), orgId: otherOrg.id, skillId: "echo", mastraRunId: "mr-fu-list-other", status: "done",
+    }).returning();
+    const [otherAction] = await db.insert(actions).values({
+      id: crypto.randomUUID(), orgId: otherOrg.id, runId: otherRun.id, skillId: "echo", kind: "reply",
+      draft: {}, idempotencyKey: `${otherRun.id}:draft`, expiresAt: new Date(Date.now() + 1000 * 60 * 60 * 72),
+    }).returning();
+
+    try {
+      const scheduled = await followUpsRepo.schedule(ctx, {
+        actionId, skillId: "echo", dueAt: new Date(Date.now() + 60_000), touchIndex: 10,
+      });
+      const cancelled = await followUpsRepo.schedule(ctx, {
+        actionId, skillId: "echo", dueAt: new Date(Date.now() + 120_000), touchIndex: 11,
+      });
+      await followUpsRepo.markStatus(ctx, cancelled!.id, "cancelled");
+      await followUpsRepo.schedule(
+        { orgId: otherOrg.id, userId: "system", role: "owner" },
+        { actionId: otherAction.id, skillId: "echo", dueAt: new Date(), touchIndex: 0 },
+      );
+
+      const found = await followUpsRepo.listForOrg(ctx);
+      expect(found).toHaveLength(2);
+      expect(found.map((row) => row.id)).toEqual(expect.arrayContaining([scheduled!.id, cancelled!.id]));
+      expect(found.map((row) => row.status)).toEqual(expect.arrayContaining(["scheduled", "cancelled"]));
+    } finally {
+      await db.delete(followUps).where(eq(followUps.orgId, otherOrg.id));
+      await db.delete(actions).where(eq(actions.id, otherAction.id));
+      await db.delete(runs).where(eq(runs.id, otherRun.id));
+      await db.delete(organization).where(eq(organization.id, otherOrg.id));
+    }
+  });
 });

@@ -43,6 +43,9 @@ export function createFollowUpsRepo(db: typeof Db) {
         ));
       return rows.length;
     },
+    async listForOrg(ctx: OrgContext) {
+      return db.select().from(followUps).where(eq(followUps.orgId, ctx.orgId));
+    },
     async markStatus(ctx: OrgContext, id: string, status: string) {
       const [row] = await db.update(followUps).set({ status })
         .where(and(eq(followUps.orgId, ctx.orgId), eq(followUps.id, id))).returning();

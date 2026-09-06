@@ -60,6 +60,17 @@
     "empty": "目前還沒有追蹤紀錄。",
     "error": "發生錯誤"
   },
+  "jobs": {
+    "title": "排程",
+    "followUps": "待處理排程",
+    "followUpsEmpty": "目前沒有排程。",
+    "dueAt": "到期 {date}",
+    "cronState": "排程狀態",
+    "everyHours": "每 {hours} 小時",
+    "lastRun": "上次執行：{status}",
+    "neverRun": "尚未執行",
+    "error": "發生錯誤"
+  },
   "workList": {
     "title": "工作",
     "live": "進行中",

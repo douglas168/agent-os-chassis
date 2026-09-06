@@ -60,6 +60,17 @@
     "empty": "No traces yet.",
     "error": "Something went wrong"
   },
+  "jobs": {
+    "title": "Jobs",
+    "followUps": "Follow-ups",
+    "followUpsEmpty": "No follow-ups.",
+    "dueAt": "due {date}",
+    "cronState": "Cron state",
+    "everyHours": "every {hours}h",
+    "lastRun": "last run {status}",
+    "neverRun": "never run",
+    "error": "Something went wrong"
+  },
   "workList": {
     "title": "Work",
     "live": "Live",

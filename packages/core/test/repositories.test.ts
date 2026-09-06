@@ -71,6 +71,17 @@ describe("org-scoped repositories", () => {
     expect(found).toBeNull();
   });
 
+  it("findLatestForSkill returns the most recent run for that skillId, org-scoped, or null", async () => {
+    const runsRepo = createRunsRepo(db);
+    const ctx = { orgId: orgA.id, userId: "system", role: "owner" };
+    await runsRepo.create(ctx, { skillId: "ar-reminder", mastraRunId: "mr-latest-1" });
+    const second = await runsRepo.create(ctx, { skillId: "ar-reminder", mastraRunId: "mr-latest-2" });
+    const latest = await runsRepo.findLatestForSkill(ctx, "ar-reminder");
+    expect(latest?.id).toBe(second.id);
+    const none = await runsRepo.findLatestForSkill(ctx, "no-such-skill");
+    expect(none).toBeNull();
+  });
+
   it("findForEntity returns only runs whose entity_ref matches the given table+id, scoped to the calling org", async () => {
     const runsRepo = createRunsRepo(db);
     const target = await runsRepo.create({ orgId: orgA.id, userId: "system", role: "owner" }, {
