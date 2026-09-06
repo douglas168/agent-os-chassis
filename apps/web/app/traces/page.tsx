@@ -7,7 +7,7 @@ type Trace = {
   failedStep: string | null; failedInput: unknown; createdAt: string;
 };
 
-const STATUS_OPTIONS = ["all", "running", "done", "failed"] as const;
+const STATUS_OPTIONS = ["all", "running", "suspended", "done", "failed"] as const;
 
 export default function TracesPage() {
   const t = useTranslations("traces");

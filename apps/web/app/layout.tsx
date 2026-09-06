@@ -28,7 +28,8 @@ async function loadShellData() {
       createMessagesRepo(db).countUnmatched(ctx),
     ]);
     return { orgName: org?.name, counts: { approvals: pending.length, jobs: due, inbox: unmatched } };
-  } catch {
+  } catch (err) {
+    console.error("loadShellData failed:", err);
     return { orgName: undefined, counts: undefined };
   }
 }

@@ -29,8 +29,8 @@ export default function WorkListPage() {
 
   if (error) return <p className="inline-block rounded-md bg-danger px-3 py-1.5 text-sm text-pill-foreground">{error}</p>;
 
-  const live = runs.filter((r) => r.status === "running" || r.status === "executing");
-  const recent = runs.filter((r) => r.status !== "running" && r.status !== "executing");
+  const live = runs.filter((r) => r.status === "running" || r.status === "suspended");
+  const recent = runs.filter((r) => r.status !== "running" && r.status !== "suspended");
 
   function RunRow({ r }: { r: Run }) {
     const content = (

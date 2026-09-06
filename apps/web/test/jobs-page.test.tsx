@@ -35,14 +35,15 @@ describe("JobsPage", () => {
     expect(followUpsSection).not.toBeNull();
     const followUpRow = within(followUpsSection as HTMLElement).getByRole("listitem");
     expect(followUpRow).toHaveTextContent("ar-reminder");
-    expect(followUpRow).toHaveTextContent("cancelled");
-    expect(followUpRow).toHaveTextContent("到期 2026-09-07T08:00:00.000Z");
+    expect(followUpRow).toHaveTextContent("已取消");
+    expect(followUpRow).not.toHaveTextContent("2026-09-07T08:00:00.000Z");
+    expect(followUpRow).toHaveTextContent("到期");
     expect(screen.getByRole("heading", { name: "排程狀態" })).toBeInTheDocument();
     const cronSection = screen.getByRole("heading", { name: "排程狀態" }).closest("section");
     expect(cronSection).not.toBeNull();
     const cronRow = within(cronSection as HTMLElement).getByRole("listitem");
     expect(cronRow).toHaveTextContent("ar-reminder");
     expect(cronRow).toHaveTextContent("每 24 小時");
-    expect(cronRow).toHaveTextContent("上次執行：done");
+    expect(cronRow).toHaveTextContent("上次執行：已完成");
   });
 });

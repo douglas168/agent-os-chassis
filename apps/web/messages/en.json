@@ -73,10 +73,22 @@
     "title": "Jobs",
     "followUps": "Follow-ups",
     "followUpsEmpty": "No follow-ups.",
-    "dueAt": "due {date}",
+    "dueAt": "due ",
+    "followUpStatus": {
+      "scheduled": "Scheduled",
+      "done": "Done",
+      "failed": "Failed",
+      "cancelled": "Cancelled"
+    },
     "cronState": "Cron state",
     "everyHours": "every {hours}h",
-    "lastRun": "last run {status}",
+    "lastRun": "last run: ",
+    "runStatus": {
+      "running": "Running",
+      "suspended": "Awaiting approval",
+      "done": "Done",
+      "failed": "Failed"
+    },
     "neverRun": "never run",
     "error": "Something went wrong"
   },

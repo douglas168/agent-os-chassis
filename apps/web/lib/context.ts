@@ -15,13 +15,12 @@ export async function resolveOrgContext(headers: Headers): Promise<OrgContext> {
       throw new Error("multiple organizations, none active — org-switcher isn't built until Plan 5");
     }
     orgId = orgs[0].id;
-    await auth.api.setActiveOrganization({ headers, body: { organizationId: orgId } });
   }
 
   // getActiveMemberRole's response body is `{ role: string }` (verified,
   // context7 /better-auth/better-auth/v1.6.23) — destructure the field, don't
   // assign the whole response object to `role`.
-  const { role } = await auth.api.getActiveMemberRole({ headers });
+  const { role } = await auth.api.getActiveMemberRole({ headers, query: { organizationId: orgId } });
   return { orgId, userId: session.user.id, role };
 }
 

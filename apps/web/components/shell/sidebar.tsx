@@ -38,7 +38,7 @@ export function Sidebar({ counts }: { counts?: Partial<Record<CountedKey, number
                   key={item.href}
                   href={item.href}
                   aria-current={active ? "page" : undefined}
-                  aria-label={t(item.labelKey)}
+                  aria-label={count ? `${t(item.labelKey)} (${count})` : t(item.labelKey)}
                   className={cn(
                     "flex items-center justify-center gap-1 rounded-md px-0 py-2 text-sm text-foreground hover:bg-accent xl:justify-between xl:gap-2 xl:px-3",
                     active && "bg-primary font-medium text-primary-foreground hover:bg-primary",

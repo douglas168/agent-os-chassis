@@ -63,9 +63,9 @@ describe("Sidebar", () => {
       </NextIntlClientProvider>,
     );
 
-    const approvalsLink = screen.getByRole("link", { name: "Approvals" });
+    const approvalsLink = screen.getByRole("link", { name: "Approvals (3)" });
     const jobsLink = screen.getByRole("link", { name: "Jobs" });
-    const inboxLink = screen.getByRole("link", { name: "Inbox" });
+    const inboxLink = screen.getByRole("link", { name: "Inbox (5)" });
     expect(within(approvalsLink).getByText("3")).toBeInTheDocument();
     expect(within(jobsLink).queryByText("0")).not.toBeInTheDocument();
     expect(within(inboxLink).getByText("5")).toBeInTheDocument();
@@ -80,8 +80,8 @@ describe("Sidebar", () => {
       </NextIntlClientProvider>,
     );
 
-    const approvalsLink = screen.getByRole("link", { name: "Approvals" });
-    expect(approvalsLink).toHaveAttribute("aria-label", "Approvals");
+    const approvalsLink = screen.getByRole("link", { name: "Approvals (3)" });
+    expect(approvalsLink).toHaveAttribute("aria-label", "Approvals (3)");
     expect(approvalsLink.querySelector("span.hidden.xl\\:inline")).toHaveTextContent("Approvals");
 
     const pill = screen.getByText("3");

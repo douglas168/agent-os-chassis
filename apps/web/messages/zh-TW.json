@@ -73,10 +73,22 @@
     "title": "排程",
     "followUps": "待處理排程",
     "followUpsEmpty": "目前沒有排程。",
-    "dueAt": "到期 {date}",
+    "dueAt": "到期 ",
+    "followUpStatus": {
+      "scheduled": "已排程",
+      "done": "已完成",
+      "failed": "失敗",
+      "cancelled": "已取消"
+    },
     "cronState": "排程狀態",
     "everyHours": "每 {hours} 小時",
-    "lastRun": "上次執行：{status}",
+    "lastRun": "上次執行：",
+    "runStatus": {
+      "running": "執行中",
+      "suspended": "待審核",
+      "done": "已完成",
+      "failed": "失敗"
+    },
     "neverRun": "尚未執行",
     "error": "發生錯誤"
   },
