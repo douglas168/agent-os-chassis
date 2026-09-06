@@ -26,6 +26,7 @@ export const user = pgTable("user", {
   banned: boolean("banned").default(false),
   banReason: text("ban_reason"),
   banExpires: timestamp("ban_expires"),
+  locale: text("locale"),
 });
 
 export const session = pgTable(
@@ -111,6 +112,7 @@ export const organization = pgTable("organization", {
   logo: text("logo"),
   createdAt: timestamp("created_at").notNull(),
   metadata: text("metadata"),
+  locale: text("locale"),
 });
 
 export const member = pgTable(

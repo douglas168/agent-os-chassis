@@ -17,8 +17,9 @@ export function LocaleSwitcher() {
   const router = useRouter();
   const [, startTransition] = useTransition();
 
-  function onChange(next: string) {
+  async function onChange(next: string) {
     document.cookie = `NEXT_LOCALE=${next}; path=/; max-age=31536000`;
+    await fetch("/api/locale", { method: "PATCH", body: JSON.stringify({ locale: next }) });
     startTransition(() => router.refresh());
   }
 

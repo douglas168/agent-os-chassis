@@ -16,8 +16,24 @@ export const auth = betterAuth({
     },
   },
   emailAndPassword: { enabled: true },
+  user: {
+    additionalFields: {
+      locale: { type: "string", required: false, input: true },
+    },
+  },
   plugins: [
-    organization({ ac, roles: orgRoles, creatorRole: "owner" }),
+    organization({
+      ac,
+      roles: orgRoles,
+      creatorRole: "owner",
+      schema: {
+        organization: {
+          additionalFields: {
+            locale: { type: "string", required: false, input: true },
+          },
+        },
+      },
+    }),
     admin(),
     // testUtils() is wired here, not in a later task, because Task 3's own
     // tests (the very next task) already need `(await auth.$context).test` —

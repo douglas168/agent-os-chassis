@@ -57,6 +57,13 @@
       "when": 1788348715916,
       "tag": "0007_nasty_jetstream",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1788658255293,
+      "tag": "0008_bumpy_randall",
+      "breakpoints": true
     }
   ]
 }
