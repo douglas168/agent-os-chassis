@@ -14,17 +14,19 @@ function renderPage() {
 }
 
 const pendingAction = {
-  id: "a1", runId: "r1", skillId: "ar-reminder", draft: { to: "x@example.com" }, status: "pending",
+  id: "a1", runId: "r1", skillId: "ar-reminder", draft: { to: "x@example.com" }, editedDraft: null,
+  status: "pending", expiresAt: new Date(Date.now() + 3600_000).toISOString(), editableFields: ["to"],
 };
 
 type PatchResponse = { ok: boolean; status?: number; json: () => Promise<unknown> };
 
-function mockFetch(patchResponse: PatchResponse | Promise<PatchResponse>, actions = [pendingAction]) {
+function mockFetch(patchResponse: PatchResponse | Promise<PatchResponse>, pending = [pendingAction], expired: unknown[] = []) {
   vi.stubGlobal(
     "fetch",
-    vi.fn((_url: string, init?: RequestInit) => {
-      if (init?.method === "PATCH") return Promise.resolve(patchResponse);
-      return Promise.resolve({ ok: true, json: () => Promise.resolve(actions) });
+    vi.fn((url: string, init?: RequestInit) => {
+      if (init?.method === "PATCH" || init?.method === "POST") return Promise.resolve(patchResponse);
+      const list = url.includes("status=expired") ? expired : pending;
+      return Promise.resolve({ ok: true, json: () => Promise.resolve(list) });
     }),
   );
 }
@@ -97,5 +99,35 @@ describe("ApprovalsPage", () => {
 
     expect(await screen.findByText("boom")).toBeInTheDocument();
     await waitFor(() => expect(screen.getByRole("button", { name: "核准" })).not.toBeDisabled());
+  });
+
+  it("PATCHes the edit endpoint when Save is clicked, then re-fetches", async () => {
+    mockFetch({ ok: true, json: () => Promise.resolve({}) });
+    renderPage();
+    const user = userEvent.setup();
+    await screen.findByText("待審核");
+    await user.click(screen.getByRole("button", { name: "存檔" }));
+    await waitFor(() => {
+      expect(fetch).toHaveBeenCalledWith(
+        "/api/actions/a1/edit",
+        expect.objectContaining({ method: "POST" }),
+      );
+    });
+  });
+
+  it("shows expired actions with a redraft button under the Expired tab, and POSTs redraft on click (finding 11)", async () => {
+    const expiredAction = { id: "a2", skillId: "ar-reminder", draft: { to: "x@example.com" }, editedDraft: null };
+    mockFetch({ ok: true, json: () => Promise.resolve({}) }, [pendingAction], [expiredAction]);
+    renderPage();
+    const user = userEvent.setup();
+    await screen.findByText("待處理");
+    await user.click(screen.getByRole("button", { name: /已過期/ }));
+    await user.click(await screen.findByRole("button", { name: "重新草擬" }));
+    await waitFor(() => {
+      expect(fetch).toHaveBeenCalledWith(
+        "/api/actions/a2/redraft",
+        expect.objectContaining({ method: "POST" }),
+      );
+    });
   });
 });

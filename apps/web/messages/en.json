@@ -30,6 +30,13 @@
     "title": "Approvals",
     "approve": "Approve",
     "deny": "Deny",
+    "save": "Save",
+    "expiresIn": "expires in {hours}h {minutes}m",
+    "expired": "expired",
+    "tabPending": "Pending",
+    "tabExpired": "Expired",
+    "expiredEmpty": "No expired actions.",
+    "redraft": "Redraft",
     "empty": "No approvals waiting right now.",
     "error": "Something went wrong"
   },

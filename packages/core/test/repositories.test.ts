@@ -1,9 +1,10 @@
 import { describe, it, expect, beforeAll, afterEach, afterAll } from "vitest";
 import { and, eq, inArray } from "drizzle-orm";
 import { db } from "../src/db/client";
-import { organization, messages, runs, contacts } from "../src/db/schema";
+import { organization, messages, runs, actions, contacts } from "../src/db/schema";
 import { createMessagesRepo } from "../src/repositories/messages";
 import { createRunsRepo } from "../src/repositories/runs";
+import { createActionsRepo } from "../src/repositories/actions";
 import { createContactsRepo } from "../src/repositories/contacts";
 
 describe("org-scoped repositories", () => {
@@ -20,12 +21,14 @@ describe("org-scoped repositories", () => {
 
   afterEach(async () => {
     const orgIds = [orgA.id, orgB.id];
+    await db.delete(actions).where(inArray(actions.orgId, orgIds));
     await db.delete(runs).where(inArray(runs.orgId, orgIds));
     await db.delete(messages).where(inArray(messages.orgId, orgIds));
     await db.delete(contacts).where(inArray(contacts.orgId, orgIds));
   });
 
   afterAll(async () => {
+    await db.delete(actions);
     await db.delete(runs);
     await db.delete(messages);
     await db.delete(contacts);
@@ -114,6 +117,26 @@ describe("org-scoped repositories", () => {
     });
     const count = await messagesRepo.countUnmatched({ orgId: orgA.id, userId: "system", role: "owner" });
     expect(count).toBe(0);
+  });
+
+  it("listByStatus returns only actions in the given status, org-scoped", async () => {
+    const actionsRepo = createActionsRepo(db);
+    const ctx = { orgId: orgA.id, userId: "system", role: "owner" };
+    const run = await createRunsRepo(db).create(ctx, { skillId: "echo", mastraRunId: "mr-status-1" });
+    const action = await actionsRepo.create(ctx, {
+      runId: run.id, skillId: "echo", kind: "reply", draft: {},
+      expiresAt: new Date(Date.now() - 1000), idempotencyKey: crypto.randomUUID(),
+    });
+    await db.update(actions).set({ status: "expired" }).where(eq(actions.id, action.id));
+
+    const found = await actionsRepo.listByStatus(ctx, "expired");
+    expect(found.map((a) => a.id)).toContain(action.id);
+
+    const foundForOtherOrg = await actionsRepo.listByStatus(
+      { orgId: orgB.id, userId: "system", role: "owner" },
+      "expired",
+    );
+    expect(foundForOtherOrg.map((a) => a.id)).not.toContain(action.id);
   });
 });
 

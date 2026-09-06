@@ -30,6 +30,13 @@
     "title": "待審核",
     "approve": "核准",
     "deny": "拒絕",
+    "save": "存檔",
+    "expiresIn": "{hours} 小時 {minutes} 分鐘後到期",
+    "expired": "已過期",
+    "tabPending": "待處理",
+    "tabExpired": "已過期",
+    "expiredEmpty": "目前沒有已過期的動作。",
+    "redraft": "重新草擬",
     "empty": "目前沒有待審核項目。",
     "error": "發生錯誤"
   },

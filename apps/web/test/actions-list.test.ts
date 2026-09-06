@@ -1,11 +1,16 @@
 import { describe, it, expect, beforeAll, afterEach, afterAll } from "vitest";
-import { db, organization, member, messages, runs, actions } from "@agentos/core";
+import { eq } from "drizzle-orm";
+import {
+  db, organization, member, messages, runs, actions,
+  createActionsRepo, createRunsRepo,
+} from "@agentos/core";
 import { auth } from "../lib/auth";
 import { matchAndRun } from "../lib/router";
 import { GET } from "../app/api/actions/route";
 
 describe("GET /api/actions", () => {
   let ownerId: string;
+  let orgId: string;
   let ownerHeaders: Headers;
 
   beforeAll(async () => {
@@ -14,9 +19,10 @@ describe("GET /api/actions", () => {
     const owner = test.createUser({ email: "actions-list-owner@example.com" });
     await test.saveUser(owner);
     ownerId = owner.id;
-    await auth.api.createOrganization({
+    const org = await auth.api.createOrganization({
       body: { name: "Actions List Test Org", slug: "actions-list-test-org", userId: owner.id },
     });
+    orgId = org!.id;
     ownerHeaders = await test.getAuthHeaders({ userId: owner.id });
   });
 
@@ -42,5 +48,32 @@ describe("GET /api/actions", () => {
     const json = await res.json();
     expect(json).toHaveLength(1);
     expect(json[0].status).toBe("pending");
+  });
+
+  it("includes editableFields for each returned action, sourced from the skill's own declaration", async () => {
+    await matchAndRun({
+      from: "editable@example.com", to: "ops@example.com",
+      subject: "Editable", body: "Edit me", providerMessageId: "p-list-edit-1",
+    });
+
+    const req = new Request("http://localhost:3000/api/actions", { headers: ownerHeaders });
+    const json = await (await GET(req)).json();
+    expect(json[0].editableFields).toEqual(["subject", "body"]);
+  });
+
+  it("returns expired actions when ?status=expired is given (finding 11)", async () => {
+    const runsRepo = createRunsRepo(db);
+    const actionsRepo = createActionsRepo(db);
+    const ctx = { orgId, userId: "system", role: "owner" };
+    const run = await runsRepo.create(ctx, { skillId: "echo", mastraRunId: "mr-expired-1" });
+    const action = await actionsRepo.create(ctx, {
+      runId: run.id, skillId: "echo", kind: "reply", draft: {},
+      expiresAt: new Date(Date.now() - 1000), idempotencyKey: crypto.randomUUID(),
+    });
+    await db.update(actions).set({ status: "expired" }).where(eq(actions.id, action.id));
+
+    const req = new Request("http://localhost:3000/api/actions?status=expired", { headers: ownerHeaders });
+    const json = await (await GET(req)).json();
+    expect(json.some((a: { id: string }) => a.id === action.id)).toBe(true);
   });
 });

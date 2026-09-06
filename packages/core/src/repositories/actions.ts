@@ -14,6 +14,9 @@ export function createActionsRepo(db: typeof Db) {
     async listPending(ctx: OrgContext) {
       return db.select().from(actions).where(and(eq(actions.orgId, ctx.orgId), eq(actions.status, pendingStatus)));
     },
+    async listByStatus(ctx: OrgContext, status: string) {
+      return db.select().from(actions).where(and(eq(actions.orgId, ctx.orgId), eq(actions.status, status)));
+    },
     async findById(ctx: OrgContext, id: string) {
       const rows = await db.select().from(actions).where(and(eq(actions.orgId, ctx.orgId), eq(actions.id, id)));
       return rows[0] ?? null;
