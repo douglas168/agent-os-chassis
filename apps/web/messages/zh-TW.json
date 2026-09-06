@@ -26,6 +26,17 @@
       "manage": "管理"
     }
   },
+  "dashboard": {
+    "title": "儀表板",
+    "loading": "載入中…",
+    "error": "發生錯誤",
+    "pendingApprovals": "待審核",
+    "actionsThisWeek": "本週動作",
+    "followUpsDue": "待處理排程",
+    "actionsExpired": "已過期動作",
+    "approved": "已核准",
+    "denied": "已拒絕"
+  },
   "approvals": {
     "title": "待審核",
     "approve": "核准",

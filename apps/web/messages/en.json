@@ -26,6 +26,17 @@
       "manage": "Manage"
     }
   },
+  "dashboard": {
+    "title": "Dashboard",
+    "loading": "Loading…",
+    "error": "Something went wrong",
+    "pendingApprovals": "Pending approvals",
+    "actionsThisWeek": "Actions this week",
+    "followUpsDue": "Follow-ups due",
+    "actionsExpired": "Expired actions",
+    "approved": "Approved",
+    "denied": "Denied"
+  },
   "approvals": {
     "title": "Approvals",
     "approve": "Approve",

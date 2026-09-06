@@ -1,4 +1,4 @@
-import { and, eq, or, lt, inArray } from "drizzle-orm";
+import { and, eq, or, lt, gte, inArray } from "drizzle-orm";
 import type { db as Db } from "../db/client";
 import { actions } from "../db/schema";
 import type { OrgContext } from "../context";
@@ -22,6 +22,9 @@ export function createActionsRepo(db: typeof Db) {
     },
     async listByStatus(ctx: OrgContext, status: string) {
       return db.select().from(actions).where(and(eq(actions.orgId, ctx.orgId), eq(actions.status, status)));
+    },
+    async listSince(ctx: OrgContext, since: Date) {
+      return db.select().from(actions).where(and(eq(actions.orgId, ctx.orgId), gte(actions.createdAt, since)));
     },
     async findById(ctx: OrgContext, id: string) {
       const rows = await db.select().from(actions).where(and(eq(actions.orgId, ctx.orgId), eq(actions.id, id)));
