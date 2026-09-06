@@ -54,6 +54,10 @@
     "error": "發生錯誤",
     "loading": "載入中…",
     "runs": "執行紀錄",
-    "runsEmpty": "目前還沒有執行紀錄。"
+    "runsEmpty": "目前還沒有執行紀錄。",
+    "contact": "聯絡人",
+    "noContact": "沒有關聯的聯絡人。",
+    "documents": "文件",
+    "noDocuments": "目前沒有文件。"
   }
 }

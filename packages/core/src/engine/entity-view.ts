@@ -1,6 +1,7 @@
-import { and, eq } from "drizzle-orm";
+import { and, eq, sql } from "drizzle-orm";
 import { db } from "../db/client";
-import { contacts } from "../db/schema";
+import { contacts, documents } from "../db/schema";
+import { createActionsRepo } from "../repositories/actions";
 import { createRunsRepo } from "../repositories/runs";
 import { SKILLS, skillArInvoices, type EntityViewData } from "@agentos/skills";
 import type { OrgContext } from "../context";
@@ -22,13 +23,51 @@ export async function loadEntityView(ctx: OrgContext, entityId: string): Promise
     // lookup — an id-only WHERE lets one org's entity resolve to another
     // org's contact row, leaking that contact's name into this response.
     const contactId = (row as any).contactId as string | undefined;
-    const [contact] = contactId ? await db.select().from(contacts).where(and(eq(contacts.id, contactId), eq(contacts.orgId, ctx.orgId))) : [];
+    const [contactRow] = contactId
+      ? await db.select().from(contacts).where(and(eq(contacts.id, contactId), eq(contacts.orgId, ctx.orgId)))
+      : [];
 
-    const presented = skill.entity.present({ ...row, contactName: contact?.name });
+    const docs = await db.select().from(documents).where(
+      and(
+        eq(documents.orgId, ctx.orgId),
+        sql`${documents.entityRef} @> ${JSON.stringify({ table: skill.entity.table, id: entityId })}::jsonb`,
+      ),
+    );
+
+    const presented = skill.entity.present({ ...row, contactName: contactRow?.name });
     const runsRepo = createRunsRepo(db);
-    const runs = await runsRepo.findForEntity(ctx, { table: skill.entity.table, id: entityId });
+    const entityRuns = await runsRepo.findForEntity(ctx, { table: skill.entity.table, id: entityId });
+    const rawPendingActions = await createActionsRepo(db).listPendingForRunIds(ctx, entityRuns.map((run) => run.id));
+    const pendingActions = rawPendingActions.map((action) => ({
+      id: action.id,
+      runId: action.runId,
+      skillId: action.skillId,
+      draft: action.draft as Record<string, unknown>,
+      editedDraft: action.editedDraft as Record<string, unknown> | null,
+      status: action.status,
+      expiresAt: action.expiresAt.toISOString(),
+      editableFields: [
+        ...(SKILLS.find((candidate) => candidate.manifest.id === action.skillId)?.editableFields ?? []),
+      ],
+    }));
 
-    return { ...presented, id: entityId, skillId: skill.manifest.id, stages: skill.entity.stages, runs };
+    return {
+      ...presented,
+      id: entityId,
+      skillId: skill.manifest.id,
+      stages: skill.entity.stages,
+      runs: entityRuns,
+      contact: contactRow
+        ? { id: contactRow.id, name: contactRow.name, company: contactRow.company }
+        : null,
+      documents: docs.map((document) => ({
+        id: document.id,
+        title: document.title,
+        mime: document.mime,
+        sizeBytes: document.sizeBytes,
+      })),
+      pendingActions,
+    };
   }
   return null;
 }

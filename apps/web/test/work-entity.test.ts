@@ -57,6 +57,8 @@ describe("GET /api/work/[entityId]", () => {
     expect(json.stages.map((s: any) => s.key)).toEqual(["issued", "due", "reminded", "escalated", "paid", "declined"]);
     expect(json.runs).toHaveLength(1);
     expect(json.runs[0].skillId).toBe("ar-reminder");
+    expect(json.contact).toEqual({ id: expect.any(String), name: "Work Entity Customer", company: null });
+    expect(json.pendingActions.length).toBeGreaterThan(0);
   });
 
   it("returns 404 for an id no skill's entity view resolves", async () => {

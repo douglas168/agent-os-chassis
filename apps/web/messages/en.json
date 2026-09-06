@@ -54,6 +54,10 @@
     "error": "Error",
     "loading": "Loading…",
     "runs": "Runs",
-    "runsEmpty": "No runs yet."
+    "runsEmpty": "No runs yet.",
+    "contact": "Contact",
+    "noContact": "No linked contact.",
+    "documents": "Documents",
+    "noDocuments": "No documents."
   }
 }

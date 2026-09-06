@@ -38,6 +38,9 @@ describe("WorkEntityPage", () => {
             status: "completed", intent: null, entityRef: null, error: null, failedStep: null,
             failedInput: null, createdAt: "2026-09-04T00:00:00Z", updatedAt: "2026-09-04T00:00:00Z",
           }],
+          contact: null,
+          documents: [],
+          pendingActions: [],
         }),
       }),
     );
@@ -68,6 +71,9 @@ describe("WorkEntityPage", () => {
           ],
           currentStage: "due",
           runs: [],
+          contact: null,
+          documents: [],
+          pendingActions: [],
         }),
       }),
     );
@@ -81,5 +87,36 @@ describe("WorkEntityPage", () => {
     renderPage();
 
     expect(screen.getByText("載入中…")).toBeInTheDocument();
+  });
+
+  it("renders the linked contact, documents, and inline approval card", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({
+        ok: true,
+        status: 200,
+        json: () => Promise.resolve({
+          id: "inv1", skillId: "ar-reminder", title: "Invoice #42", subtitle: "Acme Co",
+          fields: [{ label: "Amount", value: "$400" }],
+          stages: [{ key: "due", label: "Due" }],
+          currentStage: "due",
+          runs: [],
+          contact: { id: "c1", name: "Page Contact", company: "Acme" },
+          documents: [{ id: "d1", title: "Attached PDF", mime: "application/pdf", sizeBytes: 100 }],
+          pendingActions: [{
+            id: "a1", runId: "r1", skillId: "ar-reminder",
+            draft: { to: "customer@example.com", subject: "Reminder", body: "Please pay" },
+            editedDraft: null, status: "pending",
+            expiresAt: new Date(Date.now() + 3600_000).toISOString(),
+            editableFields: ["subject", "body"],
+          }],
+        }),
+      }),
+    );
+    renderPage();
+
+    expect(await screen.findByText("Page Contact — Acme")).toBeInTheDocument();
+    expect(screen.getByText("Attached PDF")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "核准" })).toBeInTheDocument();
   });
 });

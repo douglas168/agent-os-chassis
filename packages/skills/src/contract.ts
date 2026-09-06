@@ -14,10 +14,20 @@ export type SkillTrigger =
 
 export type EntityStage = { key: string; label: string };
 export type EntityField = { label: string; value: string };
+export type EntityContact = { id: string; name: string; company: string | null } | null;
+export type EntityDocument = { id: string; title: string; mime: string; sizeBytes: number };
+export type EntityPendingAction = {
+  id: string; runId: string; skillId: string;
+  draft: Record<string, unknown>; editedDraft: Record<string, unknown> | null;
+  status: string; expiresAt: string; editableFields: string[];
+};
 export type EntityViewData = {
   id: string; skillId: string; title: string; subtitle?: string;
   fields: EntityField[]; stages: EntityStage[]; currentStage: string;
   runs: Record<string, unknown>[];
+  contact: EntityContact;
+  documents: EntityDocument[];
+  pendingActions: EntityPendingAction[];
 };
 // table + stage list + a pure row -> display mapper — no I/O. The actual
 // row loading lives in packages/core/src/engine/entity-view.ts (see this

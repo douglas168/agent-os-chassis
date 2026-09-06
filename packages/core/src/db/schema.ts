@@ -112,6 +112,9 @@ export const documents = pgTable("documents", {
   sizeBytes: integer("size_bytes").notNull(),
   storageKey: text("storage_key").notNull(),
   extractedText: tsvector("extracted_text"),
+  // Nullable — set only for a document about a skill-owned record, using the
+  // same { table, id } shape and query pattern as runs.entityRef.
+  entityRef: jsonb("entity_ref"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });

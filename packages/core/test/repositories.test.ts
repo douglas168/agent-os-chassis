@@ -138,6 +138,30 @@ describe("org-scoped repositories", () => {
     );
     expect(foundForOtherOrg.map((a) => a.id)).not.toContain(action.id);
   });
+
+  it("listPendingForRunIds returns only pending actions for the given run ids, org-scoped", async () => {
+    const actionsRepo = createActionsRepo(db);
+    const runsRepo = createRunsRepo(db);
+    const ctx = { orgId: orgA.id, userId: "system", role: "owner" };
+    const run = await runsRepo.create(ctx, { skillId: "echo", mastraRunId: "mr-lpfri-1" });
+    await actionsRepo.create(ctx, {
+      runId: run.id,
+      skillId: "echo",
+      kind: "reply",
+      draft: {},
+      expiresAt: new Date(Date.now() + 3600_000),
+      idempotencyKey: crypto.randomUUID(),
+    });
+
+    const found = await actionsRepo.listPendingForRunIds(ctx, [run.id]);
+    expect(found).toHaveLength(1);
+
+    const foundForOtherOrg = await actionsRepo.listPendingForRunIds(
+      { orgId: orgB.id, userId: "system", role: "owner" },
+      [run.id],
+    );
+    expect(foundForOtherOrg).toHaveLength(0);
+  });
 });
 
 describe("contacts repository", () => {

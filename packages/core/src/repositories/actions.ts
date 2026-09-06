@@ -1,4 +1,4 @@
-import { and, eq, or, lt } from "drizzle-orm";
+import { and, eq, or, lt, inArray } from "drizzle-orm";
 import type { db as Db } from "../db/client";
 import { actions } from "../db/schema";
 import type { OrgContext } from "../context";
@@ -13,6 +13,12 @@ export function createActionsRepo(db: typeof Db) {
     },
     async listPending(ctx: OrgContext) {
       return db.select().from(actions).where(and(eq(actions.orgId, ctx.orgId), eq(actions.status, pendingStatus)));
+    },
+    async listPendingForRunIds(ctx: OrgContext, runIds: string[]) {
+      if (runIds.length === 0) return [];
+      return db.select().from(actions).where(
+        and(eq(actions.orgId, ctx.orgId), eq(actions.status, pendingStatus), inArray(actions.runId, runIds)),
+      );
     },
     async listByStatus(ctx: OrgContext, status: string) {
       return db.select().from(actions).where(and(eq(actions.orgId, ctx.orgId), eq(actions.status, status)));
