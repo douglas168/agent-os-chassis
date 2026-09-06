@@ -56,7 +56,7 @@
     "failedAt": "failed at {step}",
     "searchPlaceholder": "Search by skill…",
     "statusFilter": "Status",
-    "status": { "all": "All", "running": "Running", "done": "Done", "failed": "Failed" },
+    "status": { "all": "All", "running": "Running", "suspended": "Awaiting approval", "done": "Done", "failed": "Failed" },
     "empty": "No traces yet.",
     "error": "Something went wrong"
   },
