@@ -81,6 +81,7 @@
       "cancelled": "已取消"
     },
     "cronState": "排程狀態",
+    "cronEmpty": "目前沒有排程技能。",
     "everyHours": "每 {hours} 小時",
     "lastRun": "上次執行：",
     "runStatus": {

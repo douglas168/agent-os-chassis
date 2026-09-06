@@ -1,7 +1,11 @@
 import { db, organization, type OrgContext } from "@agentos/core";
 import { auth } from "./auth";
 
-export async function resolveOrgContext(headers: Headers): Promise<OrgContext> {
+export async function resolveOrgContext(
+  headers: Headers,
+  options: { persist?: boolean } = {},
+): Promise<OrgContext> {
+  const { persist = true } = options;
   const session = await auth.api.getSession({ headers });
   if (!session) throw new Error("no session — sign in required");
 
@@ -15,6 +19,12 @@ export async function resolveOrgContext(headers: Headers): Promise<OrgContext> {
       throw new Error("multiple organizations, none active — org-switcher isn't built until Plan 5");
     }
     orgId = orgs[0].id;
+    // Persisting here is a session/cookie write — legal from a Route Handler
+    // (every apps/web/app/api/**/route.ts caller), illegal during Server
+    // Component render (layout.tsx passes persist: false for that reason).
+    if (persist) {
+      await auth.api.setActiveOrganization({ headers, body: { organizationId: orgId } });
+    }
   }
 
   // getActiveMemberRole's response body is `{ role: string }` (verified,

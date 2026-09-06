@@ -36,8 +36,7 @@ describe("JobsPage", () => {
     const followUpRow = within(followUpsSection as HTMLElement).getByRole("listitem");
     expect(followUpRow).toHaveTextContent("ar-reminder");
     expect(followUpRow).toHaveTextContent("已取消");
-    expect(followUpRow).not.toHaveTextContent("2026-09-07T08:00:00.000Z");
-    expect(followUpRow).toHaveTextContent("到期");
+    expect(followUpRow).toHaveTextContent("到期 2026年9月7日 上午8:00");
     expect(screen.getByRole("heading", { name: "排程狀態" })).toBeInTheDocument();
     const cronSection = screen.getByRole("heading", { name: "排程狀態" }).closest("section");
     expect(cronSection).not.toBeNull();

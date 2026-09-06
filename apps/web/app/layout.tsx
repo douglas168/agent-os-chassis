@@ -20,7 +20,7 @@ const nunito = Nunito({ subsets: ["latin"], variable: "--font-nunito" });
 
 async function loadShellData() {
   try {
-    const ctx = await resolveOrgContext(await headers());
+    const ctx = await resolveOrgContext(await headers(), { persist: false });
     const [[org], pending, due, unmatched] = await Promise.all([
       db.select({ name: organization.name }).from(organization).where(eq(organization.id, ctx.orgId)),
       createActionsRepo(db).listPending(ctx),

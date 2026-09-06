@@ -81,6 +81,7 @@
       "cancelled": "Cancelled"
     },
     "cronState": "Cron state",
+    "cronEmpty": "No scheduled skills.",
     "everyHours": "every {hours}h",
     "lastRun": "last run: ",
     "runStatus": {
