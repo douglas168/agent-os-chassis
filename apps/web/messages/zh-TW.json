@@ -60,6 +60,15 @@
     "empty": "目前還沒有追蹤紀錄。",
     "error": "發生錯誤"
   },
+  "workList": {
+    "title": "工作",
+    "live": "進行中",
+    "liveEmpty": "目前沒有進行中的執行。",
+    "recent": "最近",
+    "recentEmpty": "目前沒有最近的執行。",
+    "failedAt": "於 {step} 失敗",
+    "error": "發生錯誤"
+  },
   "workEntity": {
     "notFound": "找不到資料",
     "error": "發生錯誤",

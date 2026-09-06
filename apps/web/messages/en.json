@@ -60,6 +60,15 @@
     "empty": "No traces yet.",
     "error": "Something went wrong"
   },
+  "workList": {
+    "title": "Work",
+    "live": "Live",
+    "liveEmpty": "No live runs.",
+    "recent": "Recent",
+    "recentEmpty": "No recent runs.",
+    "failedAt": "failed at {step}",
+    "error": "Something went wrong"
+  },
   "workEntity": {
     "notFound": "Not found",
     "error": "Error",
