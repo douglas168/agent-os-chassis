@@ -55,4 +55,41 @@ describe("GET /api/traces", () => {
 
     expect(res.status).toBe(401);
   });
+
+  it("filters by status when ?status= is given", async () => {
+    const runsRepo = createRunsRepo(db);
+    const ctx = { orgId, userId: "system", role: "owner" };
+    const failed = await runsRepo.create(ctx, { skillId: "echo", mastraRunId: "mr-filter-1" });
+    await runsRepo.updateStatus(ctx, failed.id, "failed", { error: "boom" });
+    await runsRepo.create(ctx, { skillId: "echo", mastraRunId: "mr-filter-2" }); // stays "running"
+
+    const headers = await (await auth.$context).test.getAuthHeaders({ userId: createdUserId });
+    const req = new Request("http://localhost:3000/api/traces?status=failed", { headers });
+    const json = await (await GET(req)).json();
+    expect(json.every((r: { status: string }) => r.status === "failed")).toBe(true);
+  });
+
+  it("filters by a case-insensitive skillId substring when ?q= is given", async () => {
+    const runsRepo = createRunsRepo(db);
+    const ctx = { orgId, userId: "system", role: "owner" };
+    await runsRepo.create(ctx, { skillId: "echo", mastraRunId: "mr-q-1" });
+
+    const headers = await (await auth.$context).test.getAuthHeaders({ userId: createdUserId });
+    const req = new Request("http://localhost:3000/api/traces?q=ECH", { headers });
+    const json = await (await GET(req)).json();
+    expect(json.length).toBeGreaterThan(0);
+    expect(json.every((r: { skillId: string }) => r.skillId.toLowerCase().includes("ech"))).toBe(true);
+  });
+
+  it("also matches a failing run's error text, not just skillId (finding 14 — 'failure triage')", async () => {
+    const runsRepo = createRunsRepo(db);
+    const ctx = { orgId, userId: "system", role: "owner" };
+    const run = await runsRepo.create(ctx, { skillId: "echo", mastraRunId: "mr-q-2" });
+    await runsRepo.updateStatus(ctx, run.id, "failed", { error: "unreachable-smtp-host" });
+
+    const headers = await (await auth.$context).test.getAuthHeaders({ userId: createdUserId });
+    const req = new Request("http://localhost:3000/api/traces?q=unreachable-smtp", { headers });
+    const json = await (await GET(req)).json();
+    expect(json.some((r: { id: string }) => r.id === run.id)).toBe(true);
+  });
 });

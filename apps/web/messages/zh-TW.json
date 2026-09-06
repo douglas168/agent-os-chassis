@@ -43,6 +43,9 @@
   "traces": {
     "title": "追蹤紀錄",
     "failedAt": "於 {step} 失敗",
+    "searchPlaceholder": "依技能搜尋…",
+    "statusFilter": "狀態",
+    "status": { "all": "全部", "running": "執行中", "done": "已完成", "failed": "失敗" },
     "empty": "目前還沒有追蹤紀錄。",
     "error": "發生錯誤"
   },

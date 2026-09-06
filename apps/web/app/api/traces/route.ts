@@ -13,7 +13,19 @@ export async function GET(req: Request) {
 
   try {
     const runsRepo = createRunsRepo(db);
-    const traces = await runsRepo.listForOrg(ctx);
+    let traces = await runsRepo.listForOrg(ctx);
+    const { searchParams } = new URL(req.url);
+    const status = searchParams.get("status");
+    const q = searchParams.get("q");
+    if (status) traces = traces.filter((r) => r.status === status);
+    if (q) {
+      const needle = q.toLowerCase();
+      traces = traces.filter((r) =>
+        r.skillId.toLowerCase().includes(needle) ||
+        (r.error?.toLowerCase().includes(needle) ?? false) ||
+        (r.failedStep?.toLowerCase().includes(needle) ?? false),
+      );
+    }
     return NextResponse.json(traces);
   } catch (err) {
     console.error("listForOrg failed:", err);

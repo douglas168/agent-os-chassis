@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { cleanup, render, screen } from "@testing-library/react";
+import { cleanup, render, screen, waitFor } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { NextIntlClientProvider } from "next-intl";
 import TracesPage from "@/app/traces/page";
 import messages from "@/messages/zh-TW.json";
@@ -43,5 +44,20 @@ describe("TracesPage", () => {
     renderPage();
 
     expect(await screen.findByText("發生錯誤")).toBeInTheDocument();
+  });
+
+  it("re-fetches with the search and status filters", async () => {
+    const fetchMock = vi.fn().mockResolvedValue({ ok: true, json: () => Promise.resolve([]) });
+    vi.stubGlobal("fetch", fetchMock);
+    renderPage();
+    const user = userEvent.setup();
+
+    await waitFor(() => expect(fetchMock).toHaveBeenCalled());
+    await user.type(screen.getByRole("searchbox", { name: "依技能搜尋…" }), "smtp");
+    await waitFor(() => expect(fetchMock.mock.calls.some(([url]) => url === "/api/traces?q=smtp")).toBe(true));
+
+    await user.clear(screen.getByRole("searchbox", { name: "依技能搜尋…" }));
+    await user.selectOptions(screen.getByRole("combobox", { name: "狀態" }), "failed");
+    await waitFor(() => expect(fetchMock.mock.calls.some(([url]) => url === "/api/traces?status=failed")).toBe(true));
   });
 });

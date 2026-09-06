@@ -7,24 +7,54 @@ type Trace = {
   failedStep: string | null; failedInput: unknown; createdAt: string;
 };
 
+const STATUS_OPTIONS = ["all", "running", "done", "failed"] as const;
+
 export default function TracesPage() {
   const t = useTranslations("traces");
   const [traces, setTraces] = useState<Trace[]>([]);
   const [loadError, setLoadError] = useState<string | null>(null);
+  const [q, setQ] = useState("");
+  const [status, setStatus] = useState<(typeof STATUS_OPTIONS)[number]>("all");
 
   useEffect(() => {
-    fetch("/api/traces").then(async (res) => {
+    const controller = new AbortController();
+    const params = new URLSearchParams();
+    if (q) params.set("q", q);
+    if (status !== "all") params.set("status", status);
+    const qs = params.toString();
+    fetch(`/api/traces${qs ? `?${qs}` : ""}`, { signal: controller.signal }).then(async (res) => {
       if (!res.ok) {
         setLoadError(t("error"));
         return;
       }
       setTraces(await res.json());
+    }).catch((err) => {
+      if ((err as Error).name !== "AbortError") setLoadError(t("error"));
     });
-  }, [t]);
+    return () => controller.abort();
+  }, [t, q, status]);
 
   return (
     <div className="space-y-4">
       <h1 className="text-lg font-semibold text-foreground">{t("title")}</h1>
+      <div className="flex gap-2">
+        <input
+          type="search"
+          value={q}
+          onChange={(e) => setQ(e.target.value)}
+          placeholder={t("searchPlaceholder")}
+          aria-label={t("searchPlaceholder")}
+          className="rounded-md border border-border bg-transparent px-3 py-1.5 text-sm text-foreground"
+        />
+        <select
+          value={status}
+          onChange={(e) => setStatus(e.target.value as (typeof STATUS_OPTIONS)[number])}
+          aria-label={t("statusFilter")}
+          className="rounded-md border border-border bg-transparent px-2 py-1.5 text-sm text-foreground"
+        >
+          {STATUS_OPTIONS.map((s) => <option key={s} value={s}>{t(`status.${s}`)}</option>)}
+        </select>
+      </div>
       {loadError && <p className="inline-block rounded-md bg-danger px-3 py-1.5 text-sm text-pill-foreground">{loadError}</p>}
       <ul className="space-y-3">
         {traces.length === 0 ? (
