@@ -2,3 +2,37 @@ This project vendors UI components from:
 
 - assistant-ui (https://github.com/assistant-ui/assistant-ui) — Copyright (c) 2025 AgentbaseAI Inc. — MIT
 - shadcn/ui (https://github.com/shadcn-ui/ui) — Copyright (c) 2023 shadcn — MIT
+--------------------------------------------------------------------------------
+assistant-ui — https://github.com/assistant-ui/assistant-ui
+MIT License. Copyright (c) 2025 AgentbaseAI Inc.
+
+Vendored into:
+  apps/web/components/chat/thread.tsx
+  apps/web/components/chat/thread-list.tsx
+  apps/web/components/chat/threadlist-sidebar.tsx
+  apps/web/components/chat/attachment.tsx
+  apps/web/components/chat/markdown-text.tsx
+  apps/web/components/chat/tool-fallback.tsx
+  apps/web/components/chat/tooltip-icon-button.tsx
+
+Reused from agentos-starter's own registry fetch (its NOTICE carries the same
+attribution for the same files) — see research/assistant-ui-license-verification-20260907.md
+in the parent workspace for the license verification record.
+--------------------------------------------------------------------------------
+shadcn/ui — https://github.com/shadcn-ui/ui
+MIT License. Copyright (c) 2023 shadcn
+
+Vendored into:
+  apps/web/components/ui/button.tsx
+  apps/web/components/ui/avatar.tsx
+  apps/web/components/ui/input.tsx
+  apps/web/components/ui/skeleton.tsx
+  apps/web/components/ui/collapsible.tsx
+  apps/web/components/ui/dialog.tsx
+
+Adversarial review round 1, finding 11: these four primitives are real,
+undeclared dependencies of the assistant-ui files above (thread.tsx,
+thread-list.tsx, attachment.tsx) — added here, not previously vendored.
+components/ui/sidebar.tsx is deliberately not vendored (Step 6 replaces
+threadlist-sidebar.tsx's use of it) and carries no attribution line.
+--------------------------------------------------------------------------------
