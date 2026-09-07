@@ -132,6 +132,24 @@
       "viewer": "檢視者"
     }
   },
+  "adminOrg": {
+    "orgSettings": "組織設定",
+    "name": "名稱",
+    "locale": "語言",
+    "english": "English",
+    "traditionalChinese": "繁體中文",
+    "save": "儲存",
+    "saved": "已儲存",
+    "channels": "通道連線",
+    "channelCredentials": "通道憑證",
+    "email": "電子郵件",
+    "line": "LINE",
+    "configured": "已設定",
+    "notConfigured": "尚未設定",
+    "channelFormDisabledReason": "憑證輸入功能目前停用 — 正式電子郵件／LINE 憑證不在 v1 範圍內（規格 § 12）",
+    "loading": "載入中…",
+    "error": "載入失敗"
+  },
   "brain": {
     "documents": "文件",
     "contacts": "聯絡人",

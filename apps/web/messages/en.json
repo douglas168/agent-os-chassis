@@ -132,6 +132,24 @@
       "viewer": "Viewer"
     }
   },
+  "adminOrg": {
+    "orgSettings": "Organization settings",
+    "name": "Name",
+    "locale": "Locale",
+    "english": "English",
+    "traditionalChinese": "繁體中文",
+    "save": "Save",
+    "saved": "Saved",
+    "channels": "Channel connections",
+    "channelCredentials": "Channel credentials",
+    "email": "Email",
+    "line": "LINE",
+    "configured": "Configured",
+    "notConfigured": "Not configured",
+    "channelFormDisabledReason": "Credential entry ships disabled — production email/LINE credentials are a non-goal for v1 (spec § 12)",
+    "loading": "Loading…",
+    "error": "Failed to load"
+  },
   "brain": {
     "documents": "Documents",
     "contacts": "Contacts",
