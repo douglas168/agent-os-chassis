@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeAll, afterEach, afterAll, vi } from "vitest";
 import { and, eq } from "drizzle-orm";
 import { PgUpdateBuilder } from "drizzle-orm/pg-core";
-import { db, organization, contacts, messages, runs, actions, auditLog, followUps, sweepArReminderCron, sweepExpiredActions } from "@agentos/core";
+import { db, organization, contacts, messages, runs, actions, auditLog, followUps, orgSkillConfig, sweepArReminderCron, sweepExpiredActions, createOrgSkillConfigRepo } from "@agentos/core";
 // finding 14 (adversarial review round 1): `skillArInvoices` is a
 // @agentos/skills export, not re-exported through @agentos/core (Task 5's
 // no-re-export rule) — importing it from the wrong package is a type error,
@@ -45,6 +45,7 @@ describe("ar-reminder — full loop (spec § 10)", () => {
     await db.delete(skillArInvoices).where(eq(skillArInvoices.orgId, orgId));
     await db.delete(messages).where(eq(messages.orgId, orgId));
     await db.delete(contacts).where(eq(contacts.orgId, orgId));
+    await db.delete(orgSkillConfig).where(eq(orgSkillConfig.orgId, orgId));
     await db.delete(organization).where(eq(organization.id, orgId));
   });
 
@@ -165,5 +166,29 @@ describe("ar-reminder — full loop (spec § 10)", () => {
     expect(draft).toMatchObject({ kind: "reminder", invoiceId: "fixture-invoice-1" });
     expect(result.ok).toBe(true);
     expect(sentMessages).toHaveLength(1);
+  });
+
+  it("a disabled ar-reminder skill is never triggered by the cron sweep", async () => {
+    await db.update(skillArInvoices).set({ stage: "issued", updatedAt: new Date() })
+      .where(and(eq(skillArInvoices.id, invoiceId), eq(skillArInvoices.orgId, orgId)));
+    await createOrgSkillConfigRepo(db).upsert(
+      { orgId, userId: "system", role: "owner" },
+      "ar-reminder",
+      { enabled: false, config: {} },
+    );
+
+    const swept = await sweepArReminderCron();
+    expect(swept.triggered).toBe(0);
+
+    const [invoiceAfter] = await db.select().from(skillArInvoices).where(eq(skillArInvoices.id, invoiceId));
+    expect(invoiceAfter.stage).toBe("issued");
+
+    await createOrgSkillConfigRepo(db).upsert(
+      { orgId, userId: "system", role: "owner" },
+      "ar-reminder",
+      { enabled: true, config: {} },
+    );
+    const sweptAfterReenable = await sweepArReminderCron();
+    expect(sweptAfterReenable.triggered).toBe(1);
   });
 });

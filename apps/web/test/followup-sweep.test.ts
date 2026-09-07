@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeAll, afterEach, afterAll } from "vitest";
 import { eq } from "drizzle-orm";
-import { db, organization, messages, runs, actions, followUps, createFollowUpsRepo } from "@agentos/core";
+import { db, organization, messages, runs, actions, followUps, orgSkillConfig, createFollowUpsRepo, createOrgSkillConfigRepo } from "@agentos/core";
 import { matchAndRun } from "../lib/router";
 import { sweepFollowUps } from "../lib/followup-sweep";
 
@@ -16,7 +16,10 @@ describe("sweepFollowUps", () => {
   afterEach(async () => {
     await db.delete(followUps); await db.delete(actions); await db.delete(runs); await db.delete(messages);
   });
-  afterAll(async () => { await db.delete(organization).where(eq(organization.id, orgId)); });
+  afterAll(async () => {
+    await db.delete(orgSkillConfig).where(eq(orgSkillConfig.orgId, orgId));
+    await db.delete(organization).where(eq(organization.id, orgId));
+  });
 
   it("drafts a new pending action from a due follow-up and marks it done", async () => {
     const origin = await matchAndRun({
@@ -142,5 +145,30 @@ describe("sweepFollowUps", () => {
     const followUpAction = (await db.select().from(actions))
       .find((a) => a.id !== origin.actionId && (a.draft as any)?.body?.includes("First conversation"));
     expect(followUpAction).toBeDefined();
+  });
+
+  it("a due follow-up for a disabled skill is claimed but never drafted", async () => {
+    const origin = await matchAndRun({
+      from: "customer3@example.com",
+      to: "ops@example.com",
+      subject: "Hi",
+      body: "Third message",
+      providerMessageId: "p-sweep-disabled-1",
+    });
+    const followUpsRepo = createFollowUpsRepo(db);
+    const ctx = { orgId, userId: "system", role: "owner" };
+    await followUpsRepo.schedule(ctx, {
+      actionId: origin.actionId,
+      skillId: "echo",
+      dueAt: new Date(Date.now() - 1000),
+      touchIndex: 1,
+    });
+    await createOrgSkillConfigRepo(db).upsert(ctx, "echo", { enabled: false, config: {} });
+
+    const swept = await sweepFollowUps();
+    expect(swept.drafted).toBe(0);
+
+    const [followUpRow] = await db.select().from(followUps).where(eq(followUps.actionId, origin.actionId));
+    expect(followUpRow.status).toBe("done");
   });
 });

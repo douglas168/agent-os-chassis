@@ -2,16 +2,21 @@ import { and, eq, lte } from "drizzle-orm";
 import { db } from "../db/client";
 import { organization, contacts } from "../db/schema";
 import { createMessagesRepo } from "../repositories/messages";
+import { createOrgSkillConfigRepo } from "../repositories/org-skill-config";
 import { runSkillForMessage } from "./run-skill";
 import { skillArInvoices, arReminderSkill } from "@agentos/skills";
 import type { OrgContext } from "../context";
 
 export async function sweepArReminderCron(): Promise<{ triggered: number }> {
   const orgs = await db.select().from(organization);
+  const orgSkillConfigRepo = createOrgSkillConfigRepo(db);
   let triggered = 0;
 
   for (const org of orgs) {
     const ctx: OrgContext = { orgId: org.id, userId: "system", role: "system" };
+    const orgConfig = await orgSkillConfigRepo.findOne(ctx, "ar-reminder");
+    if (orgConfig && !orgConfig.enabled) continue;
+
     const overdue = await db.select().from(skillArInvoices)
       .where(and(eq(skillArInvoices.orgId, org.id), lte(skillArInvoices.dueAt, new Date()), eq(skillArInvoices.stage, "issued")));
 

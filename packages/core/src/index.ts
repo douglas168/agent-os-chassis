@@ -8,6 +8,7 @@ export * from "./repositories/actions";
 export * from "./repositories/audit";
 export * from "./repositories/documents";
 export * from "./repositories/followups";
+export * from "./repositories/org-skill-config";
 export * from "./access";
 export * from "./engine/mastra";
 export * from "./engine/run-skill";

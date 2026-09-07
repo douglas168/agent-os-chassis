@@ -169,5 +169,9 @@
     "fileLabel": "檔案",
     "upload": "上傳",
     "searchPlaceholder": "搜尋文件"
+  },
+  "skills": {
+    "enabled": "啟用",
+    "save": "儲存"
   }
 }

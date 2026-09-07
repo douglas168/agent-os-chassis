@@ -2,6 +2,7 @@ import { and, eq } from "drizzle-orm";
 import { db } from "../db/client";
 import { followUps, actions, runs, messages } from "../db/schema";
 import { createFollowUpsRepo } from "../repositories/followups";
+import { createOrgSkillConfigRepo } from "../repositories/org-skill-config";
 import { SKILLS } from "@agentos/skills";
 import { runSkillForMessage } from "./run-skill";
 
@@ -17,6 +18,7 @@ const MAX_FOLLOWUP_ATTEMPTS = 3;
 
 export async function sweepFollowUps(): Promise<{ drafted: number }> {
   const followUpsRepo = createFollowUpsRepo(db);
+  const orgSkillConfigRepo = createOrgSkillConfigRepo(db);
   const due = await followUpsRepo.listDue();
   let drafted = 0;
 
@@ -52,6 +54,9 @@ export async function sweepFollowUps(): Promise<{ drafted: number }> {
 
       const skill = SKILLS.find((s) => s.manifest.id === row.skillId);
       if (!skill) throw new Error(`follow-up ${row.id}: skill ${row.skillId} not registered`);
+
+      const orgConfig = await orgSkillConfigRepo.findOne(ctx, row.skillId);
+      if (orgConfig && !orgConfig.enabled) continue;
 
       const inbound = {
         channel: message.channel, direction: "in" as const, from: message.from, to: message.to,

@@ -1,6 +1,6 @@
 import { createMockChannel } from "@agentos/channels";
 import { SKILLS } from "@agentos/skills";
-import { db, createMessagesRepo, createContactsRepo, createFollowUpsRepo } from "@agentos/core";
+import { db, createMessagesRepo, createContactsRepo, createFollowUpsRepo, createOrgSkillConfigRepo } from "@agentos/core";
 import { resolveChannelOrgContext } from "./context";
 import { runSkillForMessage } from "@agentos/core";
 
@@ -28,6 +28,9 @@ export async function matchAndRun(rawPayload: unknown): Promise<{ runId: string;
 
   const skill = SKILLS.find((s) => s.trigger.kind === "message" && s.trigger.matches(inbound));
   if (!skill) return { runId: "", actionId: "", matched: false };
+
+  const orgConfig = await createOrgSkillConfigRepo(db).findOne(ctx, skill.manifest.id);
+  if (orgConfig && !orgConfig.enabled) return { runId: "", actionId: "", matched: false };
 
   const { runId, actionId } = await runSkillForMessage(ctx, skill, inbound, message.id);
   return { runId, actionId, matched: true };

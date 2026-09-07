@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeAll, afterEach, afterAll } from "vitest";
 import { eq } from "drizzle-orm";
-import { db, organization, messages, runs, actions, contacts, followUps, auditLog, createFollowUpsRepo } from "@agentos/core";
+import { db, organization, messages, runs, actions, contacts, followUps, auditLog, orgSkillConfig, createFollowUpsRepo, createOrgSkillConfigRepo } from "@agentos/core";
 import { matchAndRun } from "../lib/router";
 
 describe("matchAndRun", () => {
@@ -29,6 +29,7 @@ describe("matchAndRun", () => {
     await db.delete(runs).where(eq(runs.orgId, orgId));
     await db.delete(messages).where(eq(messages.orgId, orgId));
     await db.delete(contacts).where(eq(contacts.orgId, orgId));
+    await db.delete(orgSkillConfig).where(eq(orgSkillConfig.orgId, orgId));
     await db.delete(organization).where(eq(organization.id, orgId));
   });
 
@@ -72,5 +73,23 @@ describe("matchAndRun", () => {
 
     const [followUp] = await db.select().from(followUps).where(eq(followUps.actionId, first.actionId));
     expect(followUp.status).toBe("cancelled");
+  });
+
+  it("a disabled skill never matches, even though its trigger would otherwise fire", async () => {
+    await createOrgSkillConfigRepo(db).upsert(
+      { orgId, userId: "system", role: "owner" },
+      "echo",
+      { enabled: false, config: {} },
+    );
+
+    const result = await matchAndRun({
+      from: "customer@example.com",
+      to: "ops@example.com",
+      subject: "Hi",
+      body: "Hello there",
+      providerMessageId: "p-router-disabled-1",
+    });
+
+    expect(result.matched).toBe(false);
   });
 });

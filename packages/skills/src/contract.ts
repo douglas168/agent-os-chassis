@@ -1,4 +1,4 @@
-import type { z } from "zod";
+import { z } from "zod";
 import type { InboundMessage, ProviderResult, ChannelAdapter } from "@agentos/channels";
 
 export type SkillManifest = {
@@ -6,7 +6,35 @@ export type SkillManifest = {
   name: string;
   description: string;
   approvalExpiryHours: number;
+  configSchema?: z.ZodType<unknown>;
 };
+
+export type ConfigFieldDescriptor = {
+  name: string;
+  type: "string" | "number" | "boolean";
+  optional: boolean;
+};
+
+export function describeConfigFields(schema: z.ZodType<unknown>): ConfigFieldDescriptor[] {
+  if (!(schema instanceof z.ZodObject)) return [];
+
+  return Object.entries(schema.shape).map(([name, fieldSchema]) => {
+    let inner = fieldSchema as z.ZodTypeAny;
+    let optional = false;
+
+    while (inner instanceof z.ZodOptional || inner instanceof z.ZodDefault) {
+      if (inner instanceof z.ZodOptional) optional = true;
+      inner = inner._def.innerType;
+    }
+
+    const type = inner instanceof z.ZodNumber
+      ? "number"
+      : inner instanceof z.ZodBoolean
+        ? "boolean"
+        : "string";
+    return { name, type, optional };
+  });
+}
 
 export type SkillTrigger =
   | { kind: "message"; matches: (message: InboundMessage) => boolean }
