@@ -43,3 +43,10 @@ export function can(
     return roleObj ? roleObj.authorize(permissions).success : false;
   });
 }
+
+export function isOrgAdmin(role: string): boolean {
+  return role.split(",").some((assignedRole) => {
+    const trimmed = assignedRole.trim();
+    return trimmed === "owner" || trimmed === "admin";
+  });
+}

@@ -30,7 +30,7 @@ describe("Sidebar", () => {
   it("renders all four nav groups and a link for every one of the 12 routes", () => {
     render(
       <NextIntlClientProvider locale="en" messages={en}>
-        <Sidebar />
+        <Sidebar isAdmin />
       </NextIntlClientProvider>,
     );
 
@@ -48,7 +48,7 @@ describe("Sidebar", () => {
   it("marks the active route's link with aria-current=page", () => {
     render(
       <NextIntlClientProvider locale="en" messages={en}>
-        <Sidebar />
+        <Sidebar isAdmin />
       </NextIntlClientProvider>,
     );
 
@@ -71,6 +71,30 @@ describe("Sidebar", () => {
     expect(within(inboxLink).getByText("5")).toBeInTheDocument();
 
     expect(screen.getByRole("complementary")).toHaveClass("w-16", "xl:w-[245px]");
+  });
+
+  it("hides the Manage nav group when isAdmin is false", () => {
+    render(
+      <NextIntlClientProvider locale="en" messages={en}>
+        <Sidebar isAdmin={false} />
+      </NextIntlClientProvider>,
+    );
+
+    expect(screen.queryByRole("link", { name: "Users" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: "Organization" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: "LLM Provider" })).not.toBeInTheDocument();
+  });
+
+  it("shows the Manage nav group when isAdmin is true", () => {
+    render(
+      <NextIntlClientProvider locale="en" messages={en}>
+        <Sidebar isAdmin />
+      </NextIntlClientProvider>,
+    );
+
+    expect(screen.getByRole("link", { name: "Users" })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Organization" })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "LLM Provider" })).toBeInTheDocument();
   });
 
   it("nav link labels are hidden below xl via a class, not a lost accessible name (finding 10)", () => {

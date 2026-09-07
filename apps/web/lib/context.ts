@@ -1,4 +1,4 @@
-import { db, organization, type OrgContext } from "@agentos/core";
+import { db, isOrgAdmin, organization, type OrgContext } from "@agentos/core";
 import { auth } from "./auth";
 
 export async function resolveOrgContext(
@@ -32,6 +32,12 @@ export async function resolveOrgContext(
   // assign the whole response object to `role`.
   const { role } = await auth.api.getActiveMemberRole({ headers, query: { organizationId: orgId } });
   return { orgId, userId: session.user.id, role };
+}
+
+export async function requireAdminContext(headers: Headers): Promise<OrgContext> {
+  const ctx = await resolveOrgContext(headers);
+  if (!isOrgAdmin(ctx.role)) throw new Error("admin role required");
+  return ctx;
 }
 
 // No session exists on a channel webhook request. Single-org v1 default

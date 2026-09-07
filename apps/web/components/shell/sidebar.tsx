@@ -9,7 +9,7 @@ import { cn } from "@/lib/cn";
 const COUNTED_KEYS = ["approvals", "jobs", "inbox"] as const;
 type CountedKey = (typeof COUNTED_KEYS)[number];
 
-export function Sidebar({ counts }: { counts?: Partial<Record<CountedKey, number>> }) {
+export function Sidebar({ counts, isAdmin = false }: { counts?: Partial<Record<CountedKey, number>>; isAdmin?: boolean }) {
   const pathname = usePathname();
   const t = useTranslations("nav");
 
@@ -23,7 +23,7 @@ export function Sidebar({ counts }: { counts?: Partial<Record<CountedKey, number
         <span className="hidden xl:inline" aria-hidden="true">Agent OS</span>
       </div>
       <nav className="flex-1 overflow-y-auto px-2 py-2">
-        {NAV_GROUPS.map((group) => (
+        {NAV_GROUPS.filter((group) => group !== "Manage" || isAdmin).map((group) => (
           <div key={group} className="mb-4">
             <div className="hidden px-3 py-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground xl:block">
               {t(`group.${group.toLowerCase()}`)}

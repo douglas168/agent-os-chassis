@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { can } from "../src/access";
+import { can, isOrgAdmin } from "../src/access";
 
 describe("can", () => {
   it("lets owner approve", () => {
@@ -28,5 +28,19 @@ describe("can", () => {
     // string. Grant access when any assigned role authorizes the permission.
     expect(can("viewer,operator", { action: ["approve"] })).toBe(true);
     expect(can("viewer", { action: ["approve"] })).toBe(false);
+  });
+});
+
+describe("isOrgAdmin", () => {
+  it("returns true for owner and admin, false for operator and viewer", () => {
+    expect(isOrgAdmin("owner")).toBe(true);
+    expect(isOrgAdmin("admin")).toBe(true);
+    expect(isOrgAdmin("operator")).toBe(false);
+    expect(isOrgAdmin("viewer")).toBe(false);
+  });
+
+  it("returns true when a comma-separated role list contains owner or admin", () => {
+    expect(isOrgAdmin("operator, admin")).toBe(true);
+    expect(isOrgAdmin("operator, viewer")).toBe(false);
   });
 });

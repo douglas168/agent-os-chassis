@@ -1,7 +1,8 @@
-import { describe, it, expect, afterAll } from "vitest";
+import { describe, it, expect, afterAll, beforeAll } from "vitest";
+import { eq } from "drizzle-orm";
 import { db, organization, member, can } from "@agentos/core";
 import { auth } from "../lib/auth";
-import { resolveOrgContext, resolveChannelOrgContext } from "../lib/context";
+import { requireAdminContext, resolveOrgContext, resolveChannelOrgContext } from "../lib/context";
 
 describe("resolveOrgContext", () => {
   let createdUserId: string | undefined;
@@ -77,5 +78,48 @@ describe("resolveChannelOrgContext", () => {
     await db.insert(organization)
       .values({ id: crypto.randomUUID(), name: "Second Org", slug: "second-org", createdAt: new Date() });
     await expect(resolveChannelOrgContext()).rejects.toThrow(/multiple organizations/i);
+  });
+});
+
+describe("requireAdminContext", () => {
+  let orgId: string;
+  let ownerId: string;
+  let operatorId: string;
+  let ownerHeaders: Headers;
+  let operatorHeaders: Headers;
+
+  beforeAll(async () => {
+    const ctx = await auth.$context;
+    const test = ctx.test;
+    const owner = test.createUser({ email: "guard-owner@example.com" });
+    await test.saveUser(owner);
+    ownerId = owner.id;
+    const org = await auth.api.createOrganization({
+      body: { name: "Guard Org", slug: `guard-org-${crypto.randomUUID()}`, userId: ownerId },
+    });
+    orgId = org!.id;
+    ownerHeaders = await test.getAuthHeaders({ userId: ownerId });
+
+    const operator = test.createUser({ email: "guard-operator@example.com" });
+    await test.saveUser(operator);
+    operatorId = operator.id;
+    await auth.api.addMember({ body: { organizationId: orgId, userId: operatorId, role: "operator" } });
+    operatorHeaders = await test.getAuthHeaders({ userId: operatorId });
+  });
+
+  afterAll(async () => {
+    await db.delete(member).where(eq(member.organizationId, orgId));
+    await db.delete(organization).where(eq(organization.id, orgId));
+    await (await auth.$context).test.deleteUser(ownerId);
+    await (await auth.$context).test.deleteUser(operatorId);
+  });
+
+  it("resolves for an owner", async () => {
+    const ctx = await requireAdminContext(ownerHeaders);
+    expect(ctx.role).toBe("owner");
+  });
+
+  it("throws for an operator", async () => {
+    await expect(requireAdminContext(operatorHeaders)).rejects.toThrow("admin role required");
   });
 });
