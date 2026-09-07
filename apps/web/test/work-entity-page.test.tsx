@@ -37,6 +37,7 @@ describe("WorkEntityPage", () => {
             id: "r1", orgId: "o1", skillId: "ar-reminder", messageId: null, mastraRunId: "m1",
             status: "completed", intent: null, entityRef: null, error: null, failedStep: null,
             failedInput: null, createdAt: "2026-09-04T00:00:00Z", updatedAt: "2026-09-04T00:00:00Z",
+            conversation: [], trace: [], stats: null,
           }],
           contact: null,
           documents: [],

@@ -1,6 +1,6 @@
-import { and, eq, sql } from "drizzle-orm";
+import { and, desc, eq, inArray, sql } from "drizzle-orm";
 import { db } from "../db/client";
-import { contacts, documents } from "../db/schema";
+import { actions, contacts, documents, messages } from "../db/schema";
 import { createActionsRepo } from "../repositories/actions";
 import { createRunsRepo } from "../repositories/runs";
 import { SKILLS, skillArInvoices, type EntityViewData } from "@agentos/skills";
@@ -51,12 +51,57 @@ export async function loadEntityView(ctx: OrgContext, entityId: string): Promise
       ],
     }));
 
+    const messageIds = entityRuns
+      .map((run) => run.messageId)
+      .filter((id): id is string => !!id);
+    const sourceMessages = messageIds.length
+      ? await db.select().from(messages).where(and(eq(messages.orgId, ctx.orgId), inArray(messages.id, messageIds)))
+      : [];
+    const messageById = new Map(sourceMessages.map((message) => [message.id, message]));
+
+    const runActions = entityRuns.length
+      ? await db.select().from(actions)
+        .where(and(eq(actions.orgId, ctx.orgId), inArray(actions.runId, entityRuns.map((run) => run.id))))
+        .orderBy(desc(actions.createdAt))
+      : [];
+    const actionByRunId = new Map<string, typeof runActions[number]>();
+    for (const action of runActions) {
+      if (!actionByRunId.has(action.runId)) actionByRunId.set(action.runId, action);
+    }
+
+    const mappedRuns = entityRuns.map((run) => {
+      const sourceMessage = run.messageId ? messageById.get(run.messageId) : undefined;
+      const action = actionByRunId.get(run.id);
+      const conversation: { role: "inbound" | "draft"; text: string }[] = [];
+      if (sourceMessage) conversation.push({ role: "inbound", text: sourceMessage.body });
+      if (action) conversation.push({ role: "draft", text: JSON.stringify(action.draft) ?? "" });
+
+      const trace: { label: string; detail: unknown }[] = [];
+      if (run.intent) trace.push({ label: "understand", detail: run.intent });
+      if (run.error) {
+        trace.push({
+          label: "error",
+          detail: { error: run.error, failedStep: run.failedStep, failedInput: run.failedInput },
+        });
+      }
+
+      return {
+        id: run.id,
+        skillId: run.skillId,
+        status: run.status,
+        createdAt: run.createdAt.toISOString(),
+        conversation,
+        trace,
+        stats: (run.stats as import("@agentos/skills").RunStats | null) ?? null,
+      };
+    });
+
     return {
       ...presented,
       id: entityId,
       skillId: skill.manifest.id,
       stages: skill.entity.stages,
-      runs: entityRuns,
+      runs: mappedRuns,
       contact: contactRow
         ? { id: contactRow.id, name: contactRow.name, company: contactRow.company }
         : null,

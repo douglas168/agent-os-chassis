@@ -57,6 +57,9 @@ describe("GET /api/work/[entityId]", () => {
     expect(json.stages.map((s: any) => s.key)).toEqual(["issued", "due", "reminded", "escalated", "paid", "declined"]);
     expect(json.runs).toHaveLength(1);
     expect(json.runs[0].skillId).toBe("ar-reminder");
+    expect(json.runs[0]).toHaveProperty("conversation");
+    expect(json.runs[0]).toHaveProperty("trace");
+    expect(json.runs[0]).toHaveProperty("stats");
     expect(json.contact).toEqual({ id: expect.any(String), name: "Work Entity Customer", company: null });
     expect(json.pendingActions.length).toBeGreaterThan(0);
   });

@@ -173,5 +173,18 @@
   "skills": {
     "enabled": "啟用",
     "save": "儲存"
+  },
+  "runPanel": {
+    "conversation": "對話",
+    "trace": "追蹤",
+    "noConversation": "尚無對話",
+    "noTrace": "尚無追蹤資料",
+    "turns": "回合數",
+    "steps": "步驟數",
+    "wallClock": "耗時",
+    "tokensIn": "輸入權杖",
+    "tokensOut": "輸出權杖",
+    "ttft": "首字延遲",
+    "cacheHitRate": "快取命中率"
   }
 }

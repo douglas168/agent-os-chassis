@@ -49,10 +49,30 @@ export type EntityPendingAction = {
   draft: Record<string, unknown>; editedDraft: Record<string, unknown> | null;
   status: string; expiresAt: string; editableFields: string[];
 };
+export type RunConversationTurn = { role: "inbound" | "draft"; text: string };
+export type RunTraceRow = { label: string; detail: unknown };
+export type RunStats = {
+  turns: number | null;
+  steps: number;
+  wallClockMs: number;
+  tokensIn: number | null;
+  tokensOut: number | null;
+  ttftMs: number | null;
+  cacheHitRate: number | null;
+};
+export type EntityViewRun = {
+  id: string;
+  skillId: string;
+  status: string;
+  createdAt: string;
+  conversation: RunConversationTurn[];
+  trace: RunTraceRow[];
+  stats: RunStats | null;
+};
 export type EntityViewData = {
   id: string; skillId: string; title: string; subtitle?: string;
   fields: EntityField[]; stages: EntityStage[]; currentStage: string;
-  runs: Record<string, unknown>[];
+  runs: EntityViewRun[];
   contact: EntityContact;
   documents: EntityDocument[];
   pendingActions: EntityPendingAction[];

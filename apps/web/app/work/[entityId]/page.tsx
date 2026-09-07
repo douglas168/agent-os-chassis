@@ -4,12 +4,13 @@ import { useParams } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { cn } from "@/lib/cn";
 import { ApprovalCard, type ActionWithMeta } from "@/components/approval-card";
+import { RunPanel, type RunPanelData } from "@/components/run-panel";
 
 type EntityViewData = {
   id: string; skillId: string; title: string; subtitle?: string;
   fields: { label: string; value: string }[];
   stages: { key: string; label: string }[]; currentStage: string;
-  runs: { id: string; status: string; createdAt: string }[];
+  runs: RunPanelData[];
   contact: { id: string; name: string; company: string | null } | null;
   documents: { id: string; title: string; mime: string; sizeBytes: number }[];
   pendingActions: ActionWithMeta[];
@@ -129,9 +130,9 @@ export default function WorkEntityPage() {
           {view.runs.length === 0 ? (
             <li className="text-sm text-muted-foreground">{t("runsEmpty")}</li>
           ) : (
-            view.runs.map((r) => (
-              <li key={r.id} className="rounded-lg border border-border bg-card p-3 text-sm shadow-card">
-                {r.status} — {r.createdAt}
+            view.runs.map((run) => (
+              <li key={run.id}>
+                <RunPanel run={run} />
               </li>
             ))
           )}

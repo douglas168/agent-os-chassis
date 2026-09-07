@@ -71,6 +71,13 @@
       "when": 1788663006166,
       "tag": "0009_high_kabuki",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1788780412961,
+      "tag": "0010_chilly_rick_jones",
+      "breakpoints": true
     }
   ]
 }

@@ -46,6 +46,9 @@ export const runs = pgTable("runs", {
   failedInput: jsonb("failed_input"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
+  // v1 records real workflow steps and total wall-clock time. LLM-specific
+  // measurements remain null until the skill lifecycle exposes them.
+  stats: jsonb("stats"),
 });
 
 export const actions = pgTable("actions", {

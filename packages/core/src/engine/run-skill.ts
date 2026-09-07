@@ -13,6 +13,7 @@ export async function runSkillForMessage(
   messageId: string,
   entityRef: { table: string; id: string } | null = null,
 ): Promise<{ runId: string; actionId: string }> {
+  const startedAt = Date.now();
   const mastra = getMastra();
   const workflowRun = await mastra.getWorkflow(`${skill.manifest.id}-workflow`).createRun();
 
@@ -32,8 +33,35 @@ export async function runSkillForMessage(
 
   // LCD4 (ingest half): thread the values already computed above into the
   // workflow's own understand/draft steps instead of letting them recompute.
-  const result = await workflowRun.start({ inputData: { message: inbound, intent, draft } });
-  await runsRepo.updateStatus(ctx, runRow.id, result.status);
+  // Keep the workflow boundary tolerant of callers that provide the minimal
+  // message shape used by the engine tests. Normal channel callers already
+  // provide these fields; the fallback values preserve the persisted message
+  // id as the provider identity when it is absent.
+  const workflowMessage = {
+    ...inbound,
+    direction: inbound.direction ?? "in",
+    providerMessageId: inbound.providerMessageId ?? messageId,
+    raw: inbound.raw ?? {},
+  };
+  const result = await workflowRun.start({ inputData: { message: workflowMessage, intent, draft } });
+  const wallClockMs = Date.now() - startedAt;
+
+  // Understand/draft are deterministic in the v1 skills and no LLM usage
+  // instrumentation exists yet. Keep those fields null instead of inventing
+  // measurements; steps and wall-clock time are the real values available
+  // from this workflow run.
+  await runsRepo.updateStatus(ctx, runRow.id, result.status, {
+    intent,
+    stats: {
+      turns: null,
+      steps: Object.keys(result.steps ?? {}).length,
+      wallClockMs,
+      tokensIn: null,
+      tokensOut: null,
+      ttftMs: null,
+      cacheHitRate: null,
+    },
+  });
 
   return { runId: workflowRun.runId, actionId: actionRow.id };
 }

@@ -173,5 +173,18 @@
   "skills": {
     "enabled": "Enabled",
     "save": "Save"
+  },
+  "runPanel": {
+    "conversation": "Conversation",
+    "trace": "Trace",
+    "noConversation": "No conversation yet",
+    "noTrace": "No trace data",
+    "turns": "Turns",
+    "steps": "Steps",
+    "wallClock": "Wall clock",
+    "tokensIn": "Tokens in",
+    "tokensOut": "Tokens out",
+    "ttft": "Time to first token",
+    "cacheHitRate": "Cache hit rate"
   }
 }
