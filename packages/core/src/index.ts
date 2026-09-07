@@ -6,6 +6,7 @@ export * from "./repositories/contacts";
 export * from "./repositories/runs";
 export * from "./repositories/actions";
 export * from "./repositories/audit";
+export * from "./repositories/documents";
 export * from "./repositories/followups";
 export * from "./access";
 export * from "./engine/mastra";

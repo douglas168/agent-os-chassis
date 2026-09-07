@@ -112,5 +112,14 @@
     "noContact": "No linked contact.",
     "documents": "Documents",
     "noDocuments": "No documents."
+  },
+  "brain": {
+    "documents": "Documents",
+    "contacts": "Contacts",
+    "history": "History",
+    "titlePlaceholder": "Title",
+    "fileLabel": "File",
+    "upload": "Upload",
+    "searchPlaceholder": "Search documents"
   }
 }

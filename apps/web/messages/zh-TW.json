@@ -112,5 +112,14 @@
     "noContact": "沒有關聯的聯絡人。",
     "documents": "文件",
     "noDocuments": "目前沒有文件。"
+  },
+  "brain": {
+    "documents": "文件",
+    "contacts": "聯絡人",
+    "history": "歷史紀錄",
+    "titlePlaceholder": "標題",
+    "fileLabel": "檔案",
+    "upload": "上傳",
+    "searchPlaceholder": "搜尋文件"
   }
 }
