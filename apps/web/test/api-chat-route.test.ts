@@ -118,4 +118,20 @@ describe("POST /api/chat", () => {
       isError: false,
     }]);
   });
+
+  it("accepts an empty-content assistant tool-call turn in history", async () => {
+    const { POST } = await import("../app/api/chat/route");
+    const res = await POST(new Request("http://localhost/api/chat", {
+      method: "POST",
+      headers: ownerHeaders,
+      body: JSON.stringify({
+        messages: [
+          { role: "user", content: "run echo" },
+          { role: "assistant", content: "" },
+          { role: "user", content: "continue" },
+        ],
+      }),
+    }));
+    expect(res.status).toBe(200);
+  });
 });

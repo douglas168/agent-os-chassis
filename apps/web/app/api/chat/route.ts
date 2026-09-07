@@ -21,9 +21,11 @@ export async function POST(req: Request) {
     messages.every((message: unknown): message is ChatMessageInput => {
       if (!message || typeof message !== "object") return false;
       const candidate = message as Record<string, unknown>;
-      return (candidate.role === "user" || candidate.role === "assistant")
-        && typeof candidate.content === "string"
-        && candidate.content.trim() !== "";
+      return candidate.role === "assistant"
+        ? typeof candidate.content === "string"
+        : candidate.role === "user"
+          && typeof candidate.content === "string"
+          && candidate.content.trim() !== "";
     });
   if (!hasValidMessages) {
     return NextResponse.json({ error: "messages is required" }, { status: 400 });
