@@ -3,6 +3,7 @@ import { createDocumentsRepo, db, getStorage } from "@agentos/core";
 import { resolveOrgContext } from "../../../lib/context";
 
 const DEFAULT_MAX_UPLOAD_BYTES = 10 * 1024 * 1024;
+const MAX_EXTRACTED_TEXT_BYTES = 500_000;
 const DEFAULT_ALLOWED_MIME_TYPES = [
   "text/plain",
   "application/pdf",
@@ -26,6 +27,14 @@ function safeFilename(name: string) {
     .replace(/[\\/]/g, "_")
     .replace(/[\u0000-\u001f\u007f]/g, "_");
   return sanitized || "upload";
+}
+
+function truncateUtf8(buffer: Buffer, maxBytes: number) {
+  if (buffer.byteLength <= maxBytes) return buffer.toString("utf-8");
+
+  let end = maxBytes;
+  while (end > 0 && (buffer[end]! & 0xc0) === 0x80) end -= 1;
+  return buffer.subarray(0, end).toString("utf-8");
 }
 
 export async function GET(req: Request) {
@@ -82,8 +91,9 @@ export async function POST(req: Request) {
   const buffer = Buffer.from(await file.arrayBuffer());
   const storageKey = `documents/${ctx.orgId}/${crypto.randomUUID()}-${safeFilename(file.name)}`;
 
+  let storage: ReturnType<typeof getStorage> | undefined;
   try {
-    const storage = getStorage();
+    storage = getStorage();
     await storage.put({
       key: storageKey,
       body: buffer,
@@ -92,7 +102,7 @@ export async function POST(req: Request) {
 
     // v1 only extracts plain text. Other supported MIME types remain
     // downloadable but are intentionally excluded from full-text search.
-    const text = file.type === "text/plain" ? buffer.toString("utf-8") : null;
+    const text = file.type === "text/plain" ? truncateUtf8(buffer, MAX_EXTRACTED_TEXT_BYTES) : null;
     return NextResponse.json(await createDocumentsRepo(db).create(ctx, {
       title: title.trim(),
       source: "upload",
@@ -103,6 +113,13 @@ export async function POST(req: Request) {
     }), { status: 201 });
   } catch (err) {
     console.error("store document failed:", err);
+    if (storage) {
+      try {
+        await storage.delete(storageKey);
+      } catch (cleanupErr) {
+        console.error("cleanup uploaded document failed:", cleanupErr);
+      }
+    }
     return NextResponse.json({ error: "internal error" }, { status: 500 });
   }
 }

@@ -88,4 +88,33 @@ describe("BrainPage", () => {
     expect(screen.getByText("Jane")).toBeInTheDocument();
     expect(screen.queryByText("action.approved")).not.toBeInTheDocument();
   });
+
+  it("shows an upload error returned by the documents API", async () => {
+    const user = userEvent.setup();
+    vi.stubGlobal("fetch", vi.fn((url: string, init?: RequestInit) => {
+      if (url === "/api/documents" && init?.method === "POST") {
+        return Promise.resolve({
+          ok: false,
+          json: () => Promise.resolve({ error: "file exceeds the 10-byte limit" }),
+        });
+      }
+      if (url.startsWith("/api/documents")) {
+        return Promise.resolve({ ok: true, json: () => Promise.resolve([]) });
+      }
+      if (url.startsWith("/api/brain/contacts")) {
+        return Promise.resolve({ ok: true, json: () => Promise.resolve([]) });
+      }
+      if (url.startsWith("/api/brain/history")) {
+        return Promise.resolve({ ok: true, json: () => Promise.resolve([]) });
+      }
+      return Promise.resolve({ ok: true, json: () => Promise.resolve([]) });
+    }) as unknown as typeof fetch);
+
+    renderPage();
+    await user.type(screen.getByLabelText("Title"), "Too big");
+    await user.upload(screen.getByLabelText("File"), new File(["x"], "big.txt", { type: "text/plain" }));
+    await user.click(screen.getByRole("button", { name: "Upload" }));
+
+    expect(await screen.findByRole("alert")).toHaveTextContent("file exceeds the 10-byte limit");
+  });
 });

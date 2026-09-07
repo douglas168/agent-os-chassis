@@ -20,6 +20,7 @@ export default function BrainPage() {
   const [contactsList, setContactsList] = useState<ContactRow[]>([]);
   const [historyList, setHistoryList] = useState<HistoryRow[]>([]);
   const [query, setQuery] = useState("");
+  const [uploadError, setUploadError] = useState<string | null>(null);
 
   async function loadDocuments(q: string) {
     const res = await fetch(q ? `/api/documents?q=${encodeURIComponent(q)}` : "/api/documents");
@@ -35,7 +36,26 @@ export default function BrainPage() {
 
   async function upload(formEl: HTMLFormElement) {
     const res = await fetch("/api/documents", { method: "POST", body: new FormData(formEl) });
-    if (!res.ok) return;
+    if (!res.ok) {
+      let message = "Upload failed";
+      try {
+        const body: unknown = await res.json();
+        if (
+          body &&
+          typeof body === "object" &&
+          "error" in body &&
+          typeof body.error === "string" &&
+          body.error.trim() !== ""
+        ) {
+          message = body.error;
+        }
+      } catch {
+        // Use the generic message when the response is not JSON.
+      }
+      setUploadError(message);
+      return;
+    }
+    setUploadError(null);
     formEl.reset();
     await loadDocuments(query);
   }
@@ -70,6 +90,7 @@ export default function BrainPage() {
             {t("upload")}
           </button>
         </form>
+        {uploadError ? <p role="alert" className="text-sm text-red-600">{uploadError}</p> : null}
         <input
           value={query}
           onChange={(event) => {

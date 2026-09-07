@@ -1,5 +1,6 @@
-import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import { eq } from "drizzle-orm";
+import * as core from "@agentos/core";
 import { db, documents, member, organization } from "@agentos/core";
 import { auth } from "../lib/auth";
 import { GET as listDocuments, POST as uploadDocument } from "../app/api/documents/route";
@@ -34,6 +35,32 @@ describe("/api/documents", () => {
     await (await auth.$context).test.deleteUser(userId);
   });
 
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  function uploadRequest(title: string, file: File) {
+    const form = new FormData();
+    form.set("title", title);
+    form.set("file", file);
+    return new Request("http://localhost/api/documents", {
+      method: "POST",
+      headers,
+      body: form,
+    });
+  }
+
+  function makeDistinctLargeText() {
+    const tokens: string[] = [];
+    let byteLength = 0;
+    for (let index = 0; byteLength < 1_500_000; index += 1) {
+      const token = `token${index.toString(16).padStart(8, "0")}`;
+      tokens.push(token);
+      byteLength += token.length + 1;
+    }
+    return tokens.join(" ");
+  }
+
   it("uploads a text file, then finds it via search, then downloads its content", async () => {
     const form = new FormData();
     form.set("title", "Route test doc");
@@ -63,6 +90,48 @@ describe("/api/documents", () => {
     expect(downloadRes.headers.get("content-disposition")).toContain("attachment");
     expect(downloadRes.headers.get("x-content-type-options")).toBe("nosniff");
     expect(await downloadRes.text()).toBe("overdue invoice reminder");
+  });
+
+  it("truncates large plain-text indexing input before building a tsvector", async () => {
+    const content = makeDistinctLargeText();
+    expect(Buffer.byteLength(content)).toBeGreaterThan(1_000_000);
+
+    const uploadRes = await uploadDocument(uploadRequest(
+      "Large route test doc",
+      new File([content], "large.txt", { type: "text/plain" }),
+    ));
+
+    expect(uploadRes.status).toBe(201);
+    const created = await uploadRes.json();
+    expect(created.sizeBytes).toBe(Buffer.byteLength(content));
+  });
+
+  it("deletes the uploaded blob when document creation fails", async () => {
+    const put = vi.fn(async ({ key }: { key: string }) => ({ key }));
+    const deleteBlob = vi.fn(async () => {
+      throw new Error("forced cleanup failure");
+    });
+    const storage = {
+      put,
+      get: vi.fn(),
+      signedUrl: vi.fn(),
+      delete: deleteBlob,
+    };
+    vi.spyOn(core, "getStorage").mockReturnValue(storage as unknown as ReturnType<typeof core.getStorage>);
+    vi.spyOn(core, "createDocumentsRepo").mockReturnValue({
+      create: vi.fn().mockRejectedValue(new Error("forced create failure")),
+    } as unknown as ReturnType<typeof core.createDocumentsRepo>);
+    vi.spyOn(console, "error").mockImplementation(() => {});
+
+    const res = await uploadDocument(uploadRequest(
+      "Failed route test doc",
+      new File(["will be orphaned without cleanup"], "failed.txt", { type: "text/plain" }),
+    ));
+
+    expect(res.status).toBe(500);
+    const storageKey = put.mock.calls[0]?.[0].key;
+    expect(storageKey).toEqual(expect.any(String));
+    expect(deleteBlob).toHaveBeenCalledWith(storageKey);
   });
 
   it("rejects an oversized upload before storing it", async () => {
