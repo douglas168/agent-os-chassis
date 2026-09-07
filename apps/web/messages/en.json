@@ -113,6 +113,25 @@
     "documents": "Documents",
     "noDocuments": "No documents."
   },
+  "adminUsers": {
+    "title": "Users",
+    "members": "Members",
+    "invitations": "Invitations",
+    "role": "Role",
+    "remove": "Remove",
+    "noInvitations": "No pending invitations",
+    "error": "Failed to load",
+    "loading": "Loading…",
+    "emailPlaceholder": "Email address",
+    "invite": "Invite",
+    "cancel": "Cancel",
+    "roles": {
+      "owner": "Owner",
+      "admin": "Admin",
+      "operator": "Operator",
+      "viewer": "Viewer"
+    }
+  },
   "brain": {
     "documents": "Documents",
     "contacts": "Contacts",

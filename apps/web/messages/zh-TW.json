@@ -113,6 +113,25 @@
     "documents": "文件",
     "noDocuments": "目前沒有文件。"
   },
+  "adminUsers": {
+    "title": "使用者",
+    "members": "成員",
+    "invitations": "邀請",
+    "role": "角色",
+    "remove": "移除",
+    "noInvitations": "沒有待處理的邀請",
+    "error": "載入失敗",
+    "loading": "載入中…",
+    "emailPlaceholder": "電子郵件地址",
+    "invite": "邀請",
+    "cancel": "取消",
+    "roles": {
+      "owner": "擁有者",
+      "admin": "管理員",
+      "operator": "操作員",
+      "viewer": "檢視者"
+    }
+  },
   "brain": {
     "documents": "文件",
     "contacts": "聯絡人",
