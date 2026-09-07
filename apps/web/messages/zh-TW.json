@@ -150,6 +150,17 @@
     "loading": "載入中…",
     "error": "載入失敗"
   },
+  "adminLlm": {
+    "provider": "LLM 供應商",
+    "baseUrl": "基礎網址",
+    "model": "模型",
+    "apiKey": "API 金鑰",
+    "configured": "已設定",
+    "notConfigured": "尚未設定",
+    "test": "測試連線",
+    "loading": "載入中…",
+    "error": "載入失敗"
+  },
   "brain": {
     "documents": "文件",
     "contacts": "聯絡人",

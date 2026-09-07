@@ -150,6 +150,17 @@
     "loading": "Loading…",
     "error": "Failed to load"
   },
+  "adminLlm": {
+    "provider": "LLM provider",
+    "baseUrl": "Base URL",
+    "model": "Model",
+    "apiKey": "API key",
+    "configured": "Configured",
+    "notConfigured": "Not configured",
+    "test": "Test connection",
+    "loading": "Loading…",
+    "error": "Failed to load"
+  },
   "brain": {
     "documents": "Documents",
     "contacts": "Contacts",
