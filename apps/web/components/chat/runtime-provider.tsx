@@ -40,7 +40,25 @@ const convertMessage = (message: ChatMessage): ThreadMessageLike => ({
 });
 
 async function backendApi(_history: ChatMessage[]): Promise<ChatMessage> {
-  return { role: "assistant", content: "" };
+  const res = await fetch("/api/chat", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      messages: _history.map(({ role, content }) => ({ role, content })),
+    }),
+  });
+  if (!res.ok) {
+    return {
+      role: "assistant",
+      content: "Something went wrong. Please try again.",
+    };
+  }
+  const body = await res.json();
+  return {
+    role: "assistant",
+    content: body.content,
+    toolCalls: body.toolCalls,
+  };
 }
 
 export function ChatRuntimeProvider({

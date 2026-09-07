@@ -18,4 +18,6 @@ export * from "./engine/followup-schedule";
 export * from "./engine/cron-sweep";
 export * from "./engine/entity-view";
 export * from "./engine/decline-entity";
+export * from "./engine/chat-agent";
+export * from "./engine/run-panel-data";
 export * from "./storage";

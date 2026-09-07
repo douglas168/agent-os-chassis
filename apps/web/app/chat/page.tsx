@@ -5,11 +5,15 @@ import { ChatRuntimeProvider } from "@/components/chat/runtime-provider";
 import { ThreadListSidebar } from "@/components/chat/threadlist-sidebar";
 import { Thread } from "@/components/chat/thread";
 import { ContextRail } from "@/components/chat/context-rail";
+import { RunToolUI } from "@/components/chat/run-tool-ui";
+import { DecideToolUI } from "@/components/chat/decide-tool-ui";
 
 export default function ChatPage() {
   const t = useTranslations("chat");
   return (
     <ChatRuntimeProvider>
+      <RunToolUI />
+      <DecideToolUI />
       <div className="flex h-full">
         <ThreadListSidebar />
         <section
