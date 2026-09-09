@@ -32,10 +32,12 @@ terminal, start the worker so the demo's cron sweep runs:
 npm run dev --workspace=@agentos/worker
 ```
 
-Open `http://localhost:3000`, sign in as `owner@demo.agentos.local` /
-`demo-password-1234` — you land on `/approvals`, where the seeded overdue
-invoice becomes a pending Action within seconds (the worker sweeps once
-immediately on start). Approve it to see the loop's execute step.
+The worker sweeps the seeded overdue invoice into a pending Action within
+seconds of starting — no browser step needed to trigger it. `/approvals` is
+the screen that would show it, but the web app has no sign-in page yet, so
+`/approvals` returns a bare 401 in a browser (`apps/web/proxy.ts` returns
+that by design, until a sign-in page exists). A working browser walkthrough
+of the approve step needs that page, which is not yet built.
 
 By default `.env.example` points `LLM_BASE_URL` at a local Ollama server
 (`qwen2.5:7b`). Point it at OpenAI, Anthropic, or any OpenAI-compatible
