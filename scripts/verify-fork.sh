@@ -37,11 +37,6 @@ npm install --no-audit --no-fund
 cp .env.example .env.local
 sed -i.bak "s/localhost:5433/localhost:${POSTGRES_PORT}/g" .env.local && rm .env.local.bak
 
-# The rename engine rewrites the test database token in this init script. The
-# required demo-fork slug contains a hyphen, so quote the generated Postgres
-# identifier before the official image executes the script on first startup.
-sed -i -E 's/^(CREATE DATABASE )([^;]+)(;)$/\1"\2"\3/' docker/init-test-db.sql
-
 # Postgres only, first — migrate and seed need the schema and data to exist
 # BEFORE web/worker start. The worker's first tick fires immediately on
 # container start (apps/worker/src/index.ts), so bringing it up before the

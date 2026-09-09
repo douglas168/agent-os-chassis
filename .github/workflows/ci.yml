@@ -41,7 +41,7 @@ jobs:
           cache: npm
       - run: npm ci
       - name: Create test database
-        run: PGPASSWORD=agentos psql -h localhost -U agentos -d agentos -c "CREATE DATABASE agentos_test"
+        run: PGPASSWORD=agentos psql -h localhost -U agentos -d agentos -c 'CREATE DATABASE "agentos_test"'
       - name: Migrate test database
         run: npx tsx scripts/migrate-test-db.ts
       - run: npm run typecheck
