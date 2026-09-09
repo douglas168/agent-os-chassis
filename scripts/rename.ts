@@ -2,7 +2,7 @@ import { readFileSync, writeFileSync, readdirSync, statSync, existsSync } from "
 import { join, relative } from "node:path";
 
 const EXCLUDED_DIRS = new Set(["node_modules", ".git", ".next", "dist", ".data", ".worktrees", ".superpowers"]);
-const EXCLUDED_FILES = new Set(["CLAUDE.md", "HANDOFF.md"]);
+const EXCLUDED_FILES = new Set(["CLAUDE.md", "HANDOFF.md", "rename.ts", "rename.test.ts"]);
 const OLD_SCOPE = "agentos";
 const OLD_DB_TOKEN = "agentos";
 const OLD_DISPLAY = "Agent OS";
@@ -80,7 +80,7 @@ export function runRename(root: string, opts: { slug: string; display: string })
   //    a database literally named "agentos_test" (adversarial-plan-review F5)
   //    — without this, the renamed .env.example's TEST_DATABASE_URL points at
   //    a database name this script never creates.
-  for (const file of ["docker-compose.yml", ".env.example", "docker/init-test-db.sql"]) {
+  for (const file of ["docker-compose.yml", ".env.example", "docker/init-test-db.sql", ".github/workflows/ci.yml", "apps/web/.env.example"]) {
     rewriteFile(root, file, (c) => rewriteToken(c, OLD_DB_TOKEN, slug));
   }
 
