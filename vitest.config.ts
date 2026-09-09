@@ -18,6 +18,7 @@ export default defineConfig({
       "apps/*/test/**/*.test.ts",
       "apps/*/test/**/*.test.tsx",
       "test/**/*.test.ts",
+      "scripts/**/*.test.ts",
     ],
     environment: "node",
     environmentMatchGlobs: [["apps/web/test/**/*.test.tsx", "jsdom"]],

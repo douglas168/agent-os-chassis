@@ -13,7 +13,8 @@
     "db:generate": "npm run db:generate --workspace=@agentos/core",
     "db:migrate": "npm run db:migrate --workspace=@agentos/core",
     "db:migrate:test": "tsx --env-file=.env.local scripts/migrate-test-db.ts",
-    "seed": "tsx --env-file=.env.local scripts/seed.ts"
+    "seed": "tsx --env-file=.env.local scripts/seed.ts",
+    "rename": "tsx scripts/rename.ts"
   },
   "devDependencies": {
     "@vitejs/plugin-react": "6.1.1",
