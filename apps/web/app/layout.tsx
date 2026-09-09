@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import type { Metadata } from "next";
 import { headers } from "next/headers";
 import { eq } from "drizzle-orm";
 import { Nunito } from "next/font/google";
@@ -16,6 +17,10 @@ import { AppShell } from "@/components/shell/app-shell";
 import { ThemeProvider } from "@/components/theme-provider";
 import { resolveOrgContext } from "@/lib/context";
 import "./globals.css";
+
+export const metadata: Metadata = {
+  title: "Agent OS",
+};
 
 const nunito = Nunito({ subsets: ["latin"], variable: "--font-nunito" });
 
