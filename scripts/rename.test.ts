@@ -33,6 +33,11 @@ describe("rewriteToken", () => {
     const input = "postgresql://agentos:agentos@localhost:5433/agentos_test";
     expect(rewriteToken(input, "agentos", "acme")).toBe("postgresql://acme:acme@localhost:5433/acme_test");
   });
+
+  it("rewrites the CamelCase brand token separately from the spaced form", () => {
+    const input = 'You are the AgentOS chat operator assistant. Not "Agent OS".';
+    expect(rewriteToken(input, "AgentOS", "AcmeQuotes")).toBe('You are the AcmeQuotes chat operator assistant. Not "Agent OS".');
+  });
 });
 
 describe("validateSlug", () => {

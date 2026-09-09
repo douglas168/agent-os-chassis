@@ -6,6 +6,7 @@ const EXCLUDED_FILES = new Set(["CLAUDE.md", "HANDOFF.md", "rename.ts", "rename.
 const OLD_SCOPE = "agentos";
 const OLD_DB_TOKEN = "agentos";
 const OLD_DISPLAY = "Agent OS";
+const OLD_DISPLAY_CAMEL = "AgentOS";
 
 export function rewriteScope(content: string, oldSlug: string, newSlug: string): string {
   return content.split(`@${oldSlug}/`).join(`@${newSlug}/`);
@@ -87,6 +88,14 @@ export function runRename(root: string, opts: { slug: string; display: string })
   // 4. Brand string — fixed file list
   for (const file of ["apps/web/components/shell/sidebar.tsx", "apps/web/app/layout.tsx", "README.md"]) {
     rewriteFile(root, file, (c) => rewriteToken(c, OLD_DISPLAY, display));
+  }
+
+  // 4b. Brand string, CamelCase form (no space) — fixed file list. The LLM
+  //     system prompt introduces itself by this token; a bare rewriteToken
+  //     pass on OLD_DISPLAY (which has a space) never matches it (Task 5
+  //     review F6).
+  for (const file of ["packages/core/src/engine/chat-agent.ts", "packages/core/test/scaffold.test.ts"]) {
+    rewriteFile(root, file, (c) => rewriteToken(c, OLD_DISPLAY_CAMEL, display.replace(/\s+/g, "")));
   }
 
   console.log(`Renamed to "${slug}" / "${display}". Remaining manual steps:`);
