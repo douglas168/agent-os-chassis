@@ -48,4 +48,13 @@ jobs:
       - run: npm run build
       - run: npm test
       - name: License check
-        run: npx license-checker --production --onlyAllow "MIT;Apache-2.0;BSD;BSD-2-Clause;BSD-3-Clause;ISC"
+        run: |
+          set -e
+          npx license-checker-rseidelsohn --json > /tmp/licenses.json
+          COUNT=$(node -e "console.log(Object.keys(require('/tmp/licenses.json')).length)")
+          echo "Scanned $COUNT packages"
+          if [ "$COUNT" -lt 100 ]; then
+            echo "::error::License scan found only $COUNT packages (expected 500+). The scanner likely failed to read the dependency tree instead of finding zero real violations. Failing closed."
+            exit 1
+          fi
+          npx license-checker-rseidelsohn --onlyAllow "MIT;Apache-2.0;BSD;BSD-2-Clause;BSD-3-Clause;ISC;LGPL-3.0-or-later;MPL-2.0;BlueOak-1.0.0;MIT-0;CC0-1.0;0BSD;CC-BY-4.0;CC-BY-3.0;Apache-2.0 AND LGPL-3.0-or-later AND MIT;Apache-2.0 AND MIT;(AFL-2.1 OR BSD-3-Clause);(MIT AND CC-BY-3.0)"
