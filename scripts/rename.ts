@@ -80,7 +80,7 @@ export function runRename(root: string, opts: { slug: string; display: string })
   //    a database literally named "agentos_test" (adversarial-plan-review F5)
   //    — without this, the renamed .env.example's TEST_DATABASE_URL points at
   //    a database name this script never creates.
-  for (const file of ["docker-compose.yml", ".env.example", "docker/init-test-db.sql", ".github/workflows/ci.yml", "apps/web/.env.example"]) {
+  for (const file of ["docker-compose.yml", ".env.example", "docker/init-test-db.sql", ".github/workflows/ci.yml", "apps/web/.env.example", "packages/core/test/scaffold.test.ts"]) {
     rewriteFile(root, file, (c) => rewriteToken(c, OLD_DB_TOKEN, slug));
   }
 

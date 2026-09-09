@@ -21,7 +21,7 @@ test("the root workspace declares all AgentOS packages", () => {
 
 test("npm links all AgentOS workspace packages", () => {
   for (const packageName of ["core", "channels", "skills"]) {
-    const linkPath = resolve(repoRoot, "node_modules", "@agentos", packageName);
+    const linkPath = resolve(repoRoot, "node_modules", "@agentos/", packageName);
     expect(existsSync(linkPath), `${linkPath} should exist`).toBe(true);
     expect(lstatSync(linkPath).isSymbolicLink(), `${linkPath} should be a symlink`).toBe(true);
   }
