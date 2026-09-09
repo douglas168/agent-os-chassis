@@ -1,0 +1,51 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: agentos
+          POSTGRES_PASSWORD: agentos
+          POSTGRES_DB: agentos
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U agentos"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      DATABASE_URL: postgresql://agentos:agentos@localhost:5432/agentos
+      TEST_DATABASE_URL: postgresql://agentos:agentos@localhost:5432/agentos_test
+      STORAGE_ROOT: ./.data/storage
+      BETTER_AUTH_SECRET: ci-test-secret-not-for-production
+      BETTER_AUTH_URL: http://localhost:3000
+      LLM_BASE_URL: http://localhost:11434/v1
+      LLM_API_KEY: ci-dummy
+      LLM_MODEL: ci-dummy
+      EMAIL_API_KEY: ""
+      LINE_CHANNEL_ACCESS_TOKEN: ""
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Create test database
+        run: PGPASSWORD=agentos psql -h localhost -U agentos -d agentos -c "CREATE DATABASE agentos_test"
+      - name: Migrate test database
+        run: npx tsx scripts/migrate-test-db.ts
+      - run: npm run typecheck
+      - run: npm run build
+      - run: npm test
+      - name: License check
+        run: npx license-checker --production --onlyAllow "MIT;Apache-2.0;BSD;BSD-2-Clause;BSD-3-Clause;ISC"
