@@ -1,7 +1,7 @@
 {
   "name": "@agentos/web",
   "private": true,
-  "scripts": { "predev": "test -e .env.local || ln -s ../../.env.local .env.local", "prebuild": "test -e .env.local || ln -s ../../.env.local .env.local", "dev": "next dev", "build": "next build", "typecheck": "tsc --noEmit" },
+  "scripts": { "predev": "if [ -L .env.local ] && [ ! -e .env.local ]; then rm -f .env.local; fi; [ -e .env.local ] || [ ! -e ../../.env.local ] || ln -s ../../.env.local .env.local", "prebuild": "if [ -L .env.local ] && [ ! -e .env.local ]; then rm -f .env.local; fi; [ -e .env.local ] || [ ! -e ../../.env.local ] || ln -s ../../.env.local .env.local", "dev": "next dev", "build": "next build", "typecheck": "tsc --noEmit" },
   "dependencies": {
     "@agentos/core": "*",
     "@agentos/channels": "*",
