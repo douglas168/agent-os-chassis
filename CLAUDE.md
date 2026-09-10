@@ -1,6 +1,6 @@
 # agent-os-chassis — forkable agentic OS starter template
 
-> The full template M1 builds (parent workspace `30-AgentOS-github/CLAUDE.md` § The template repo). Publishable: strangers fork this repo directly. Build bookkeeping (specs, plans, milestones) lives in the parent workspace, never here.
+> A forkable agentic OS starter template. Clone it, run `scripts/rename.ts` (see FORKING.md), and build your own agent product on top. See README.md to get started.
 
 milestone-tracking: disabled
 tdd: enabled
@@ -9,5 +9,5 @@ codex-network: enabled
 
 ## Rules
 
-- No OSS enters this repo without license verification — see the parent workspace's `docs/architecture.md` § Architecture Invariants.
-- Every domain table carries `org_id` — see the parent workspace's design spec § 2, § 6.
+- No OSS enters this repo without license verification: dependency licenses are checked in CI (`.github/workflows/ci.yml`) via `license-checker-rseidelsohn`, against an explicit allow list in that file.
+- Every domain table carries an `org_id` column, and every repository helper scopes its queries by it — this is how this template keeps one Postgres database safely shared across multiple tenant organizations.

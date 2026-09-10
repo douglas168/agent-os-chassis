@@ -1,5 +1,10 @@
 # HANDOFF
 
+> **Build-history artifact — not current project state.** This records how
+> this chassis was originally built, before it was forked. Superseded by
+> this repo's own README.md and FORKING.md for anything about using or
+> extending the fork you have now.
+
 **Date:** 2026-09-03
 **Session summary:** Ran `?status` orientation, found M1 Plan 4 (skill depth & demo skill) fully built and Gate-B-verified in worktree `worktree-plan-4-skill-depth` from a prior session (2026-09-02), but not yet merged, and `MILESTONES.md` stale at "Plan 3/6." Presented the Gate B five-line report; Douglas approved ("ship it"). Merged to `main`, ran the `mark-shipped` → `update-docs` → `session-handoff` tail.
 
