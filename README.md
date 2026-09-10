@@ -10,10 +10,10 @@ skill with no external accounts required.
 
 After copying `.env.example` below, set a non-empty `BETTER_AUTH_SECRET` in
 `.env.local` before running `npm run seed` or starting an app — generate one
-with `openssl rand -base64 32`. The checked-in `apps/web/.env.local` symlink
-(with `.env` as a fallback if the former is absent) points at the root
-`.env.local`, so edit the root file only; this lets Next.js load the same
-values as the worker and Compose.
+with `openssl rand -base64 32`. `npm run dev --workspace=@agentos/web`
+auto-creates an `apps/web/.env.local` symlink to the root file on first run
+via a `predev` hook; edit the root `.env.local` only. This lets Next.js load
+the same values as the worker and Compose.
 
 ```bash
 git clone <your-fork-url>

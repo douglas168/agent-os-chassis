@@ -57,8 +57,9 @@ endpoint works. For the Docker/full-Compose path, point `LLM_BASE_URL` at
 containers can't reach the host's `localhost`. (For local `npm run dev`,
 `localhost` is correct.)
 
-The checked-in `apps/web/.env.local` symlink (with `.env` as a fallback if the
-former is absent) points to the root file, so edit only `.env.local`.
+`npm run dev --workspace=@agentos/web` auto-creates an `apps/web/.env.local`
+symlink to the root `.env.local` on first run via a `predev` hook, so edit
+only the root `.env.local`.
 
 ```bash
 docker compose up -d --wait postgres
