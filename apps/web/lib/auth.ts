@@ -4,8 +4,17 @@ import { organization, admin, testUtils } from "better-auth/plugins";
 import { db } from "@agentos/core";
 import { ac, orgRoles } from "@agentos/core";
 
+const authSecret = process.env.BETTER_AUTH_SECRET;
+if (typeof authSecret !== "string" || authSecret.trim() === "") {
+  throw new Error(
+    "BETTER_AUTH_SECRET must be set to a non-empty value before Better Auth starts. " +
+      "Generate one with `openssl rand -base64 32`.",
+  );
+}
+
 export const auth = betterAuth({
   database: drizzleAdapter(db, { provider: "pg" }),
+  secret: authSecret,
   advanced: {
     database: {
       // Keep every Better-Auth table's id column type consistent with the

@@ -2,7 +2,7 @@
   "name": "@agentos/worker",
   "private": true,
   "type": "module",
-  "scripts": { "dev": "tsx watch src/index.ts", "typecheck": "tsc --noEmit" },
+  "scripts": { "dev": "node --env-file=../../.env.local ../../node_modules/.bin/tsx watch src/index.ts", "typecheck": "tsc --noEmit" },
   "dependencies": { "@agentos/core": "*", "@agentos/skills": "*", "@agentos/channels": "*" },
   "devDependencies": { "tsx": "^4.19.0", "typescript": "^5.7.0" }
 }

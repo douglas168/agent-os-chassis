@@ -1,4 +1,4 @@
-import { readFileSync, writeFileSync, readdirSync, statSync, existsSync } from "node:fs";
+import { readFileSync, writeFileSync, readdirSync, lstatSync, existsSync } from "node:fs";
 import { join, relative } from "node:path";
 
 const EXCLUDED_DIRS = new Set(["node_modules", ".git", ".next", "dist", ".data", ".worktrees", ".superpowers"]);
@@ -29,6 +29,17 @@ export function validateSlug(slug: string): void {
   }
 }
 
+export function validateDisplay(display: string): void {
+  if (!display.trim()) {
+    throw new Error("--display must not be empty");
+  }
+  if (/["'`\\]/.test(display)) {
+    throw new Error(
+      `Invalid --display "${display}" — must not contain quote or backslash characters (would break generated source files).`
+    );
+  }
+}
+
 export function walkRepoFiles(root: string): string[] {
   const out: string[] = [];
   function walk(dir: string) {
@@ -37,7 +48,12 @@ export function walkRepoFiles(root: string): string[] {
       const full = join(dir, entry);
       const rel = relative(root, full);
       if (EXCLUDED_FILES.has(entry)) continue;
-      const stat = statSync(full);
+      // Do not follow the checked-in web env symlinks. They intentionally
+      // point at a forker's root .env.local, which is absent until the
+      // quickstart copy step and is therefore a dangling link in a fresh
+      // clone.
+      const stat = lstatSync(full);
+      if (stat.isSymbolicLink()) continue;
       if (stat.isDirectory()) {
         walk(full);
       } else if (/\.(ts|tsx|json|yml|yaml|md)$/.test(entry) || entry === "Dockerfile") {
@@ -64,7 +80,7 @@ function rewriteFile(root: string, relPath: string, transform: (content: string)
 
 export function runRename(root: string, opts: { slug: string; display: string }) {
   validateSlug(opts.slug);
-  if (!opts.display.trim()) throw new Error("--display must not be empty");
+  validateDisplay(opts.display);
   const { slug, display } = opts;
 
   // 1. Package scope — repo-wide walk (LCD #5): package.json names, import

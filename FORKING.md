@@ -47,16 +47,29 @@ leave them if you're curious how this chassis was built.
 
 ```bash
 cp .env.example .env.local
-docker compose up -d
-npm run db:migrate
-npm run seed
 ```
 
-Then set `LLM_BASE_URL` / `LLM_API_KEY` / `LLM_MODEL` in `.env.local` — any
-OpenAI-compatible endpoint works, including a local Ollama server (the
-`.env.example` default). `npm run seed` reads `.env.local` directly
+Set a non-empty `BETTER_AUTH_SECRET` in `.env.local` before starting any
+service — generate one with `openssl rand -base64 32`. Set
+`LLM_BASE_URL` / `LLM_API_KEY` / `LLM_MODEL` here too; any OpenAI-compatible
+endpoint works. For the Docker/full-Compose path, point `LLM_BASE_URL` at
+`http://host.docker.internal:11434/v1` instead of `localhost` — the
+containers can't reach the host's `localhost`. (For local `npm run dev`,
+`localhost` is correct.)
+
+The checked-in `apps/web/.env.local` symlink (with `.env` as a fallback if the
+former is absent) points to the root file, so edit only `.env.local`.
+
+```bash
+docker compose up -d --wait postgres
+npm run db:migrate
+npm run seed
+docker compose up -d --build web worker
+```
+
+`npm run seed` reads `.env.local` directly
 (`tsx --env-file=.env.local`) — without the copy above it fails immediately,
-before you ever reach the LLM config step.
+before the database or LLM setup can be used.
 
 ## 3. Adding a skill
 

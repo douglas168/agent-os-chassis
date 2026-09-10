@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { rewriteScope, rewriteToken, validateSlug } from "./rename";
+import { rewriteScope, rewriteToken, validateDisplay, validateSlug } from "./rename";
 
 describe("rewriteScope", () => {
   it("rewrites a package scope in a package.json name field", () => {
@@ -49,5 +49,17 @@ describe("validateSlug", () => {
     expect(() => validateSlug("Acme Quotes")).toThrow();
     expect(() => validateSlug("123-acme")).toThrow();
     expect(() => validateSlug("")).toThrow();
+  });
+});
+
+describe("validateDisplay", () => {
+  it("accepts a display name that is safe for generated source files", () => {
+    expect(() => validateDisplay("Acme Quotes")).not.toThrow();
+  });
+
+  it("rejects empty values and quote or backslash characters", () => {
+    expect(() => validateDisplay("   ")).toThrow();
+    expect(() => validateDisplay('Acme "Pro"')).toThrow(/quote or backslash/);
+    expect(() => validateDisplay("Acme\\Pro")).toThrow(/quote or backslash/);
   });
 });

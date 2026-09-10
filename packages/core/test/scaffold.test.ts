@@ -1,7 +1,7 @@
-import { execFileSync } from "node:child_process";
 import { existsSync, lstatSync, readFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import { Client } from "pg";
 import { expect, test } from "vitest";
 
 const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), "../../..");
@@ -27,12 +27,18 @@ test("npm links all AgentOS workspace packages", () => {
   }
 });
 
-test("the Postgres compose service accepts connections", () => {
-  const output = execFileSync(
-    "docker",
-    ["compose", "exec", "-T", "postgres", "pg_isready", "-U", "agentos"],
-    { cwd: repoRoot, encoding: "utf8" },
-  );
+test("the configured Postgres database accepts connections", async () => {
+  const databaseUrl = process.env.DATABASE_URL;
+  if (!databaseUrl) {
+    throw new Error("DATABASE_URL must be set for the Postgres reachability check");
+  }
 
-  expect(output).toMatch(/accepting connections/);
+  const client = new Client({ connectionString: databaseUrl });
+  await client.connect();
+  try {
+    const result = await client.query<{ ok: number }>("select 1 as ok");
+    expect(result.rows[0]?.ok).toBe(1);
+  } finally {
+    await client.end();
+  }
 });

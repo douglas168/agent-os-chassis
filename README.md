@@ -8,18 +8,26 @@ skill with no external accounts required.
 
 ## 30-minute quickstart
 
+After copying `.env.example` below, set a non-empty `BETTER_AUTH_SECRET` in
+`.env.local` before running `npm run seed` or starting an app — generate one
+with `openssl rand -base64 32`. The checked-in `apps/web/.env.local` symlink
+(with `.env` as a fallback if the former is absent) points at the root
+`.env.local`, so edit the root file only; this lets Next.js load the same
+values as the worker and Compose.
+
 ```bash
 git clone <your-fork-url>
 cd agent-os-chassis
 npm install
 cp .env.example .env.local
-docker compose up -d postgres
+docker compose up -d --wait postgres
 npm run db:migrate
 npm run seed
 npm run dev --workspace=@agentos/web
 ```
 
-`docker compose up -d postgres` starts only the database —
+`docker compose up -d --wait postgres` starts only the database and waits for
+its healthcheck —
 `npm run dev --workspace=@agentos/web` runs the web app locally on port
 3000. (There is no root-level `dev` script — only `apps/web/package.json`
 defines one, so the bare form `npm run dev` fails with "Missing script:
@@ -42,7 +50,7 @@ of the approve step needs that page, which is not yet built.
 By default `.env.example` points `LLM_BASE_URL` at a local Ollama server
 (`qwen2.5:7b`). Point it at OpenAI, Anthropic, or any OpenAI-compatible
 endpoint instead by setting `LLM_BASE_URL` / `LLM_API_KEY` / `LLM_MODEL` in
-`.env.local`.
+`.env.local` before starting the worker.
 
 ## Forking this for your own product
 
