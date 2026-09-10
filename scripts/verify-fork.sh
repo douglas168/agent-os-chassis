@@ -38,11 +38,6 @@ if git -C "$SOURCE_ROOT" rev-parse --is-inside-work-tree >/dev/null 2>&1; then
   if [ -s "$SCRATCH/working-tree.patch" ]; then
     git -C "$SCRATCH/repo" apply "$SCRATCH/working-tree.patch"
   fi
-  for env_link in apps/web/.env apps/web/.env.local; do
-    if [ -L "$SOURCE_ROOT/$env_link" ]; then
-      ln -s "$(readlink "$SOURCE_ROOT/$env_link")" "$SCRATCH/repo/$env_link"
-    fi
-  done
 fi
 
 cd "$SCRATCH/repo"

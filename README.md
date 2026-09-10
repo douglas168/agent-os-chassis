@@ -9,7 +9,8 @@ skill with no external accounts required.
 ## 30-minute quickstart
 
 After copying `.env.example` below, set a non-empty `BETTER_AUTH_SECRET` in
-`.env.local` before running `npm run seed` or starting an app — generate one
+`.env.local` before running `npm run seed`, `npm run build`, or `npm test`, or
+starting an app — generate one
 with `openssl rand -base64 32`. `npm run dev --workspace=@agentos/web`
 auto-creates an `apps/web/.env.local` symlink to the root file on first run
 via a `predev` hook; edit the root `.env.local` only. This lets Next.js load
