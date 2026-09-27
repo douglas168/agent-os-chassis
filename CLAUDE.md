@@ -6,6 +6,7 @@ milestone-tracking: disabled
 tdd: enabled
 constitution: disabled
 codex-network: enabled
+factory: pending
 
 ## Rules
 
